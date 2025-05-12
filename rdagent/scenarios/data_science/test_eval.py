@@ -103,7 +103,8 @@ class MLETestEval(TestEvalBase):
     def eval(self, competition: str, workspace: FBWorkspace) -> str:
         workspace.execute(
             env=self.env,
-            entry=f"mlebench grade-sample submission.csv {competition} --data-dir /mle/data | tee mle_score.txt",
+            entry=f"mlebench grade-sample submission.csv {competition} --data-dir /mle/data 2>&1 | tee mle_score.txt",
+            # NOTE: mlebench does not give output to stdout. so 2>&1 is very necessary !!!!!!
         )
         workspace.execute(env=self.env, entry="chmod 777 mle_score.txt")
         return (workspace.workspace_path / "mle_score.txt").read_text()
@@ -112,11 +113,11 @@ class MLETestEval(TestEvalBase):
         mle_check_code = (
             (Path(__file__).absolute().resolve().parent / "eval_tests" / "mle_submission_format_test.txt")
             .read_text()
-            .replace("<competition_id>", self.scen.competition)
+            .replace("<competition_id>", competition)
         )
         workspace.inject_files(**{"test/mle_submission_format_test.py": mle_check_code})
         submission_check_out, submission_ret_code = workspace.execute_ret_code(
-            env=mde, entry="python test/mle_submission_format_test.py"
+            env=self.env, entry="python test/mle_submission_format_test.py"
         )
 
         workspace.inject_files(**{"test/mle_submission_format_test.output": submission_check_out})
