@@ -10,6 +10,8 @@ dump_model_eval:
     The code should follow the guideline below:
     {% include "components.coder.data_science.share.prompts:dump_model_coder.guideline" %}
 
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+    
     You will receive the following information:
     - The implemented code
     - The stdout from running the code
@@ -57,6 +59,8 @@ docdev:
   system: |-
     {% include "scenarios.data_science.share:scen.role" %}  Your task is to create documentation for a data science solution.
 
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+    
     You will be given:
     - a list of files in the folder.
     - content from some important files.

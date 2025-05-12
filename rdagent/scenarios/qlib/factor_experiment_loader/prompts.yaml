@@ -4,9 +4,12 @@ extract_factors_system: |-
     2. 抽取出所有的因子，并概述因子的计算过程，请注意有些因子可能存在于表格中，请不要遗漏，因子的名称请使用英文，不能包含空格，可用下划线连接，研报中可能不含有因子，若没有请返回空字典;
     3. 抽取研报里面的所有模型，并概述模型的计算过程，可以分步骤描述模型搭建或计算的过程，研报中可能不含有模型，若没有请返回空字典;
 
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+    
     user will treat your factor name as key to store the factor, don't put any interaction message in the content. Just response the output without any interaction and explanation.
     All names should be in English.
     Respond with your analysis in JSON format. The JSON schema should include:
+    ```json
     {
         "summary": "The summary of this report",
         "factors": {
@@ -18,17 +21,20 @@ extract_factors_system: |-
             "Name of model 2": "Description to model 2"
         }
     }
+    ```
 
 extract_factors_follow_user: |-
     Please continue extracting the factors. Please ignore factors appeared in former messages. If no factor is found, please return an empty dict.
     Notice: You should not miss any factor in the report! Some factors might appear several times in the report. You can repeat them to avoid missing other factors.
     Respond with your analysis in JSON format. The JSON schema should include:
+    ```json
     {
         "factors": {
             "Name of factor 1": "Description to factor 1",
             "Name of factor 2": "Description to factor 2"
         }
     }
+    ```
 
 extract_factor_formulation_system: |-
     I have a financial engineering research report and a list of factors extracted from it. I need assistance in extracting specific information based on the report and the provided list of factors. The tasks are as follows:
@@ -36,6 +42,8 @@ extract_factor_formulation_system: |-
     1. For each factor, I need its calculation formula in LaTeX format. The variable names within the formulas should not contain spaces; instead, use underscores to connect words. Ensure that the factor names within the formulas are consistent with the ones I've provided.
     2. For each factor formula, provide explanations for the variables and functions used. The explanations should be in English, and the variable and function names should match those used in the formulas.
 
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+    
     Here are the sources of data I have:
 
     1. Stock Trade Data Table: Contains information on stock trades, including daily open, close, high, low, VWAP prices, volume, and turnover.
@@ -46,6 +54,7 @@ extract_factor_formulation_system: |-
     Please expand the formulation to use the source data I have provided. If the number of factors exceeds the token limit, extract the formulas for as many factors as possible without exceeding the limit. Ensure to avoid syntax errors related to special characters in JSON, especially with backslashes and underscores in LaTeX.
 
     Provide your analysis in JSON format, using the following schema:
+    ```json
     {
         "factor name 1": {
             "formulation": "latex formulation of factor 1",
@@ -62,6 +71,7 @@ extract_factor_formulation_system: |-
             }
         }
     }
+    ```
 
 
 extract_factor_formulation_user: |-
@@ -89,16 +99,22 @@ classify_system: |-
 
     If the document meets all the above conditions, please return 1; otherwise, please return 0.
 
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+    
     Please respond with your decision in JSON format. Just respond the output json string without any interaction and explanation.
     The JSON schema should include:
+    ```json
     {
         "class": 1
     }
+    ```
 
 factor_viability_system: |-
     User has designed several factors in quant investment. Please help the user to check the viability of these factors.
     These factors are used to build a daily frequency strategy in China A-share market.
 
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+    
     User will provide a pandas dataframe like table containing following information:
     1. The name of the factor;
     2. The simple description of the factor;
@@ -125,6 +141,7 @@ factor_viability_system: |-
 
     Please respond with your decision in JSON format. Just respond the output json string without any interaction and explanation.
     The JSON schema should include:
+    ```json
     {
         "Name to factor 1":
         {
@@ -142,10 +159,13 @@ factor_viability_system: |-
             "reason": "The reason to the viability of this factor"
         }
     }
+    ```
 
 factor_relevance_system: |-
     User has designed several factors in quant investment. Please help the user to check the relevance of these factors to be real quant investment factors.
     These factors are used to build a daily frequency strategy in China A-share market.
+
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 
     User will provide a pandas dataframe like table containing following information:
     1. The name of the factor;
@@ -165,6 +185,7 @@ factor_relevance_system: |-
 
     Please respond with your decision in JSON format. Just respond the output json string without any interaction and explanation.
     The JSON schema should include:
+    ```json
     {
         "Name to factor 1":
         {
@@ -182,12 +203,15 @@ factor_relevance_system: |-
             "reason": "The reason to the relevance of this factor"
         }
     }
+    ```
 
 
 factor_duplicate_system: |-
     User has designed several factors in quant investment. Please help the user to duplicate these factors.
     These factors are used to build a daily frequency strategy in China A-share market.
 
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+    
     User will provide a pandas dataframe like table containing following information:
     1. The name of the factor;
     2. The simple description of the factor;

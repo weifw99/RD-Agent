@@ -5,6 +5,8 @@ exp_feedback:
     Below is a detailed description of the current Kaggle competition scenario:
     {{ scenario }}
 
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+
     Your task is to analyze the current experiment's hypothesis, implementation (code), and results, explicitly comparing them with previous experiments and the best previous result (SOTA).
 
     Step-by-step Analysis Process:

@@ -125,15 +125,14 @@ class FactorFBWorkspace(FBWorkspace):
                 return self.FB_CODE_NOT_SET, None
         with FileLock(self.workspace_path / "execution.lock"):
             if self.target_task.version == 1:
+                '''
                 source_data_path = (
-                    Path(
-                        FACTOR_COSTEER_SETTINGS.data_folder_debug,
-                    )
+                    Path(FACTOR_COSTEER_SETTINGS.data_folder_debug,)
                     if data_type == "Debug"  # FIXME: (yx) don't think we should use a debug tag for this.
-                    else Path(
-                        FACTOR_COSTEER_SETTINGS.data_folder,
-                    )
+                    else Path(FACTOR_COSTEER_SETTINGS.data_folder,)
                 )
+                '''
+                source_data_path = Path(FACTOR_COSTEER_SETTINGS.data_folder,)
             elif self.target_task.version == 2:
                 # TODO you can change the name of the data folder for a better understanding
                 source_data_path = Path(KAGGLE_IMPLEMENT_SETTING.local_data_path) / KAGGLE_IMPLEMENT_SETTING.competition

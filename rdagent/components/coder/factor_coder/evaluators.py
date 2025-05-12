@@ -24,6 +24,7 @@ class FactorEvaluatorForCoder(CoSTEEREvaluator):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+        print('##'*10, f"FactorEvaluatorForCoder.__init__ params: self.scen: {self.scen}")
         self.value_evaluator = FactorValueEvaluator(self.scen)
         self.code_evaluator = FactorCodeEvaluator(self.scen)
         self.final_decision_evaluator = FactorFinalDecisionEvaluator(self.scen)
@@ -36,6 +37,8 @@ class FactorEvaluatorForCoder(CoSTEEREvaluator):
         queried_knowledge: QueriedKnowledge = None,
         **kwargs,
     ) -> FactorSingleFeedback:
+
+        print('##'*10, f"FactorEvaluatorForCoder.evaluate params: target_task: {target_task}, implementation: {implementation}, gt_implementation: {gt_implementation}, queried_knowledge: {queried_knowledge}, kwargs: {kwargs}")
         if implementation is None:
             return None
 
@@ -101,6 +104,8 @@ class FactorEvaluatorForCoder(CoSTEEREvaluator):
                 factor_feedback.final_decision = decision_from_value_check
                 factor_feedback.final_feedback = "Value evaluation failed, skip final decision evaluation."
             else:
+                print('###' * 10, f"FactorEvaluatorForCoder.evaluate params: target_task: {target_task}, implementation: {implementation}, factor_feedback: {factor_feedback}, gt_implementation: {gt_implementation} ")
+
                 factor_feedback.code_feedback, _ = self.code_evaluator.evaluate(
                     target_task=target_task,
                     implementation=implementation,

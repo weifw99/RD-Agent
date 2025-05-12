@@ -105,6 +105,7 @@ A snapshot of one instrument, from which you can tell the distribution of the da
 """
         return JJ_TPL.render(
             file_name=p.name,
+            # file_name=str(p.absolute()),
             type_desc="h5 info",
             content=df_info,
         )
@@ -150,6 +151,9 @@ def get_data_folder_intro(fname_reg: str = ".*", flags=0, variable_mapping=None)
         generate_data_folder_from_qlib()
     content_l = []
     for p in Path(FACTOR_COSTEER_SETTINGS.data_folder_debug).iterdir():
+    # for p in Path(FACTOR_COSTEER_SETTINGS.data_folder).iterdir():
+
+        print('##'*10, f"get_data_folder_intro p: {p}, variable_mapping: {variable_mapping}" )
         if re.match(fname_reg, p.name, flags) is not None:
             if variable_mapping:
                 content_l.append(get_file_desc(p, variable_mapping.get(p.stem, [])))

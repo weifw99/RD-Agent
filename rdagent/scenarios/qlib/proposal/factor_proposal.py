@@ -81,7 +81,19 @@ class QlibFactorHypothesis2Experiment(FactorHypothesis2Experiment):
         }, True
 
     def convert_response(self, response: str, hypothesis: Hypothesis, trace: Trace) -> FactorExperiment:
-        response_dict = json.loads(response)
+        try:
+            response_dict = json.loads(response)
+        except json.JSONDecodeError:
+            print(f"{'##'*10} QlibFactorHypothesis2Experiment.convert_response：JSON 解析错误，将反斜杠替换为四个反斜杠(LaTeX 公式处理), json response: {response}")
+            # 处理 JSON 解析错误，将反斜杠替换为四个反斜杠(LaTeX 公式处理)
+            def escape_latex_for_json(s):
+                import re
+                # 将单个反斜杠替换为四个反斜杠（适用于 LaTeX 公式在 JSON 中的表示）
+                return re.sub(r'\\', r'\\\\', s)
+
+            response_dict = escape_latex_for_json(response)
+        print(f"{'##' * 10} QlibFactorHypothesis2Experiment.convert_response：response_dict: {response_dict}")
+
         tasks = []
 
         for factor_name in response_dict:

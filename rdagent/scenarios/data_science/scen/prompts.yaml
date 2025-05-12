@@ -41,7 +41,11 @@ competition_description_template:
     The user will provide you a Kaggle competition description, and you need to extract specific details from it.
     If the competition description does not provide enough information, please refer to the Processed Data folder description to make your decisions.
     For the dataset, the competition may not include detailed information about the dataset. The user has read the dataset and provide you the relevant information. Please include it in your response.
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+    
     Please answer in Json format with the following schema:
+    ```json
     {
       "Task Type": "The type of competition task, e.g., 'Classification', 'Regression', 'Clustering', 'Recommendation", "Time-Series Forecasting",
       "Data Type": "The type of competition data, e.g., 'Tabular', 'Time Series', 'Text (Natural Language Processing)', 'Image (Computer Vision)', 'Audio', 'Video'", 
@@ -53,6 +57,7 @@ competition_description_template:
       "Metric Name": "The name of the metric which this competition use for scoring the submission."
       "Metric Direction": True or False as True means bigger metric number is better, False means smaller is better.
     }
+    ```
   user: |-
     Competition Description: 
     {{ competition_raw_description }}

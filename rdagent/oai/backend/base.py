@@ -281,6 +281,7 @@ class APIBackend(ABC):
             shrink_multiple_break=shrink_multiple_break,
         )
 
+        logger.warning(f'build_messages_and_create_chat_completion, messages: {messages}')
         resp = self._try_create_chat_completion_or_embedding(  # type: ignore[misc]
             *args,
             messages=messages,
@@ -332,6 +333,7 @@ class APIBackend(ABC):
         max_retry = LLM_SETTINGS.max_retry if LLM_SETTINGS.max_retry is not None else max_retry
         timeout_count = 0
         for i in range(max_retry):
+            logger.warning(f'retry: {i}, embedding: {embedding}, chat_completion: {chat_completion}, args: {args}, kwargs: {kwargs}')
             API_start_time = datetime.now()
             try:
                 if embedding:
@@ -339,6 +341,7 @@ class APIBackend(ABC):
                 if chat_completion:
                     return self._create_chat_completion_auto_continue(*args, **kwargs)
             except Exception as e:  # noqa: BLE001
+                logger.error(f"{e}")
                 if hasattr(e, "message") and (
                     "'messages' must contain the word 'json' in some form" in e.message
                     or "\\'messages\\' must contain the word \\'json\\' in some form" in e.message
@@ -366,7 +369,7 @@ class APIBackend(ABC):
                     time.sleep(self.retry_wait_seconds)
                     if RD_Agent_TIMER_wrapper.timer.started and not isinstance(e, json.decoder.JSONDecodeError):
                         RD_Agent_TIMER_wrapper.timer.add_duration(datetime.now() - API_start_time)
-                logger.warning(str(e))
+                logger.warning(f'retry: {i}, embedding: {embedding}, chat_completion: {chat_completion}, exception: {str(e)}')
                 logger.warning(f"Retrying {i+1}th time...")
         error_message = f"Failed to create chat completion after {max_retry} retries."
         raise RuntimeError(error_message)
@@ -388,6 +391,7 @@ class APIBackend(ABC):
                 if message["role"] == LLM_SETTINGS.system_prompt_role:
                     # NOTE: assumption: systemprompt is always the first message
                     break
+        logger.warning(f"_create_chat_completion_add_json_in_prompt, add_json_in_prompt: {add_json_in_prompt}, json_mode: {json_mode}, messages: {messages}")
         return self._create_chat_completion_inner_function(messages=messages, json_mode=json_mode, *args, **kwargs)  # type: ignore[misc]
 
     def _create_chat_completion_auto_continue(
@@ -405,7 +409,8 @@ class APIBackend(ABC):
         """
         if seed is None and LLM_SETTINGS.use_auto_chat_cache_seed_gen:
             seed = LLM_CACHE_SEED_GEN.get_next_seed()
-        input_content_json = json.dumps(messages)
+        # logger.warning(f"_create_chat_completion_auto_continue, seed: {seed}, messages: {messages}")
+        input_content_json = json.dumps(messages) # 解析 json， 是否能获取到 json？
         input_content_json = (
             chat_cache_prefix + input_content_json + f"<seed={seed}/>"
         )  # FIXME this is a hack to make sure the cache represents the round index
@@ -419,22 +424,40 @@ class APIBackend(ABC):
 
         all_response = ""
         new_messages = deepcopy(messages)
-        try_n = 6
-        for _ in range(try_n):  # for some long code, 3 times may not enough for reasoning models
+        try_n = 1
+        for i_ in range(try_n):  # for some long code, 3 times may not enough for reasoning models
             if "json_mode" in kwargs:
                 del kwargs["json_mode"]
+            logger.warning(f"_create_chat_completion_auto_continue, _create_chat_completion_add_json_in_prompt try_n: {try_n}_{i_}, new_messages: {new_messages}, json_mode: {json_mode}, json_target_type: {json_target_type}")
+
             response, finish_reason = self._create_chat_completion_add_json_in_prompt(
                 new_messages, json_mode=json_mode, *args, **kwargs
             )  # type: ignore[misc]
+            logger.warning(f"_create_chat_completion_auto_continue, _create_chat_completion_add_json_in_prompt try_n: {try_n}_{i_}, response length: {len(response)},response: {response}, finish_reason: {finish_reason}, json_mode: {json_mode}, json_target_type: {json_target_type}" )
+
+            # response 移除 think
             all_response += response
             if finish_reason is None or finish_reason != "length":
                 if json_mode:
                     try:
                         json.loads(all_response)
-                    except:
-                        match = re.search(r"```json(.*)```", all_response, re.DOTALL)
-                        all_response = match.groups()[0] if match else all_response
-                        json.loads(all_response)
+                    except json.decoder.JSONDecodeError as e:
+                        logger.warning(f"_create_chat_completion_auto_continue json loads Failed to parse json: {e}, try to parse json in code block")
+                        match_json = re.search(r"```json(.*)```", all_response, re.DOTALL)
+                        from rdagent.oai.llm_utils import extract_json_objects
+                        json_result = extract_json_objects(all_response)
+                        # logger.warning(f"_create_chat_completion_auto_continue json search, match_json: {match_json}, match: {match}")
+                        if match_json:
+                            all_response = match_json.group(0)
+                            all_response = all_response.replace('```json', '').replace('```', '').strip()
+                            print(f"match_json all_response: {all_response}")
+                        elif len(json_result)>0:
+                            all_response = str(json_result[0])
+                            print(f"json_result all_response: {all_response}")
+                        else:
+                            all_response = all_response
+                        logger.warning(f"_create_chat_completion_auto_continue json loads all response: {all_response}")
+                        # json.loads(all_response)
                 if json_target_type is not None:
                     TypeAdapter(json_target_type).validate_json(all_response)
                 if self.dump_chat_cache:

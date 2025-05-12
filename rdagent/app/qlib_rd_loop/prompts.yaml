@@ -1,7 +1,11 @@
 hypothesis_generation:
   system: |-
     You are an expert in financial analysis. Your task is to generate a well-reasoned hypothesis based on the provided financial factors and report content.
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+    
     Please ensure your response is in JSON format as shown below:
+    ```json
     {
       "hypothesis": "A clear and concise hypothesis based on the provided information.",
       "reason": "A detailed explanation supporting the generated hypothesis.",
@@ -10,6 +14,7 @@ hypothesis_generation:
       "concise_justification": "One line summary. It focuses on the justification for the change in new hypothesis and the route of exploration supporting the growth of the hypothesis, based on the observation. ",
       "concise_knowledge": "One line summary. It focuses on a transferable knowledege that comes with the new hypothesis. Use conditional grammar. eg. "If...., ..; When..., .; and etc"
     }
+    ```
 
   user: |-
     The following are the financial factors and their descriptions:

@@ -3,7 +3,11 @@ kg_description_template:
     You are an assistant that extracts structured information from unstructured text.
     The user will provide you a Kaggle competition description, and you need to extract specific details from it.
     For the dataset, the competition may not include detailed information about the dataset. The user has read the dataset and provide you the relevant information. Please include it in your response.
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+    
     Please answer in Json format with the following schema:
+    ```json
     {
       "Competition Type": "The type of competition, e.g., 'Classification', 'Regression', 'Clustering', 'Prediction", "Time-Series Forecasting",
       "Competition Description": "A brief description of the competition",
@@ -13,6 +17,7 @@ kg_description_template:
       "Submission channel number to each sample": "The number of channels in the output for each sample, e.g., 1 for regression, N for N class classification with probabilities, etc. A Integer. If not specified, it is 1."
       "Metric Evaluation Description": "A brief description of the metrics used in the evaluation. Please note that if `evaluation_metric_direction` is True, it indicates that higher values are better; if False, lower values are preferred."
     }
+    ```
     Since these might be very similar column names in data like one_hot_encoded columns, you can use some regex to group them together.
 
 

@@ -79,6 +79,7 @@ class FactorCodeEvaluator(FactorEvaluator):
         **kwargs,
     ):
         factor_information = target_task.get_task_information()
+        print('##'*10, f"FactorCodeEvaluator.evaluate Factor information: {factor_information}")
         code = implementation.all_codes
 
         system_prompt = (
@@ -98,7 +99,8 @@ class FactorCodeEvaluator(FactorEvaluator):
         )
 
         execution_feedback_to_render = execution_feedback
-        for _ in range(10):  # 10 times to split the content is enough
+        for try_i in range(10):  # 10 times to split the content is enough
+            print('##'*10, f"FactorCodeEvaluator.evaluate Trying to split the execution feedback into {try_i} times")
             user_prompt = (
                 Environment(undefined=StrictUndefined)
                 .from_string(
@@ -215,7 +217,7 @@ class FactorOutputFormatEvaluator(FactorEvaluator):
                     user_prompt=gen_df_info_str,
                     system_prompt=system_prompt,
                     json_mode=True,
-                    json_target_type=Dict[str, str | bool | int],
+                    json_target_type=Dict[str, str | bool | int | list[str | int | float | bool | Dict[str, str | int | float | bool ]]],
                 )
                 resp_dict = json.loads(resp)
                 resp_dict["output_format_decision"] = str(resp_dict["output_format_decision"]).lower() in ["true", "1"]
@@ -559,7 +561,7 @@ class FactorFinalDecisionEvaluator(FactorEvaluator):
                         system_prompt=system_prompt,
                         json_mode=True,
                         seed=attempts,  # in case of useless retrying when cache enabled.
-                        json_target_type=Dict[str, str | bool | int],
+                        json_target_type=Dict[str, str | bool | int | list[str | int | float | bool | Dict[str, str | int | float | bool ]]],
                     ),
                 )
                 final_decision = final_evaluation_dict["final_decision"]

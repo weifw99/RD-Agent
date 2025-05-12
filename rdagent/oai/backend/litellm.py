@@ -12,6 +12,7 @@ from rdagent.log import LogColors
 from rdagent.log import rdagent_logger as logger
 from rdagent.oai.backend.base import APIBackend
 from rdagent.oai.llm_conf import LLMSettings
+import litellm
 
 
 class LiteLLMSettings(LLMSettings):
@@ -33,6 +34,7 @@ class LiteLLMAPIBackend(APIBackend):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
+        litellm.config_path = LITELLM_SETTINGS.litellm_config_path
 
     def _calculate_token_from_messages(self, messages: list[dict[str, Any]]) -> int:
         """
@@ -57,6 +59,8 @@ class LiteLLMAPIBackend(APIBackend):
         response = embedding(
             model=model_name,
             input=input_content_list,
+            api_base=LITELLM_SETTINGS.embedding_openai_base_url,
+            api_key=LITELLM_SETTINGS.openai_api_key,
             *args,
             **kwargs,
         )
@@ -104,6 +108,8 @@ class LiteLLMAPIBackend(APIBackend):
             temperature=temperature,
             max_tokens=max_tokens,
             reasoning_effort=reasoning_effort,
+            base_url=LITELLM_SETTINGS.chat_openai_base_url,
+            api_key=LITELLM_SETTINGS.openai_api_key,
             **kwargs,
         )
         logger.info(f"{LogColors.GREEN}Using chat model{LogColors.END} {model}", tag="llm_messages")
@@ -134,6 +140,8 @@ class LiteLLMAPIBackend(APIBackend):
             logger.info(f"{LogColors.BLUE}assistant:{LogColors.END} {finish_reason_str}\n{content}", tag="llm_messages")
 
         global ACC_COST
+        # logger.warning(f"LiteLLMAPIBackend._create_chat_completion_inner_function {LogColors.GREEN}Using model{LogColors.END} {model}", tag="llm_messages")
+        '''
         cost = completion_cost(model=model, messages=messages, completion=content)
         ACC_COST += cost
         logger.info(
@@ -151,4 +159,5 @@ class LiteLLMAPIBackend(APIBackend):
             },
             tag="token_cost",
         )
+        '''
         return content, finish_reason

@@ -170,9 +170,11 @@ class FBWorkspace(Workspace):
         workspace_path = Path(workspace_path)
         for data_file_path in data_path.iterdir():
             workspace_data_file_path = workspace_path / data_file_path.name
+            print(f"{'$$$' * 20}   FBWorkspace link_all_files_in_folder_to_workspace Linking data_path: {data_path}, workspace_path:{workspace_path}, \n workspace_data_file_path:{workspace_data_file_path}, data_file_path: {data_file_path}, platform.system():{platform.system()}")
+
             if workspace_data_file_path.exists():
                 workspace_data_file_path.unlink()
-            if platform.system() == "Linux":
+            if platform.system() == "Linux" or platform.system() == "MacOS" or platform.system() == "Darwin":
                 os.symlink(data_file_path, workspace_data_file_path)
             if platform.system() == "Windows":
                 os.link(data_file_path, workspace_data_file_path)

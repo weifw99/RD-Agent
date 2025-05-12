@@ -34,6 +34,7 @@ hypothesis_and_feedback: |-
 
 hypothesis_output_format: |-
   The output should follow JSON format. The schema is as follows:
+  ```json
   {
     "action": "If "hypothesis_specification" provides the action you need to take, please follow "hypothesis_specification" to choose the action. Otherwise, based on previous experimental results, suggest the action you believe is most appropriate at the moment. It should be one of ["Feature engineering", "Feature processing", "Model feature selection", "Model tuning"]"
     "hypothesis": "The new hypothesis generated based on the information provided.",
@@ -43,6 +44,7 @@ hypothesis_output_format: |-
     "concise_justification": "One line summary. Justify the hypothesis based on theoretical principles or initial assumptions.",
     "concise_knowledge": "One line summary. Transferable knowledge based on theoretical principles. Use conditional grammar. eg. "If...., ..; When..., .; and etc" Make sure that you state things clearly without ambiguity. Eg. avoid saying "previous hypothesis", because one wouldn't know what that is."
   }
+  ```
 
 hypothesis_specification:
   Feature engineering: |-
@@ -137,6 +139,7 @@ hypothesis_specification:
 feature_experiment_output_format: |-
   According to the hypothesis, please help user design one or more feature engineering tasks.
   The output should follow JSON format. The schema is as follows:
+  ```json
   {
       "factor or group name 1": {
           "description": "description of factor or group name 1",
@@ -156,11 +159,13 @@ feature_experiment_output_format: |-
       }
       # Don't add ellipsis (...) or any filler text that might cause JSON parsing errors here!
   }
+  ```
 
 model_experiment_output_format: |-
   According to the hypothesis, please help user design one model task.
   We only build one model from four main model types: ["XGBoost", "RandomForest", "LightGBM", "NN"].
   The output should follow JSON format. The schema is as follows: 
+  ```json
   {
       "model_name": "model_name",
       "description": "A detailed description of the model",
@@ -173,6 +178,7 @@ model_experiment_output_format: |-
       "model_type": "Please select only **one** model type from the following four options: XGBoost, RandomForest, LightGBM, or NN. The selected model must be unique and used as the **primary model**. You may choose an auxiliary model for support or optimization on specific tasks if necessary, but the primary model must come from the provided options."
 
   }
+  ```
 
 kg_feedback_generation_user: |-
   We are in a process of finding and validating hypotheses to build a powerful model. Each round aims to confirm or reject hypotheses based on results.
@@ -219,6 +225,8 @@ model_tuning_feedback_generation:
     You are an advanced assistant for analyzing results in data-driven R&D, in the context of designing machine learning models.
     The task is described in the following scenario:
     {{ scenario }}
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 
     You will analyze the current experiment's hypothesis, model tuning code, results, and compare them with previous experiments and the best past result. 
     Your feedback should:
@@ -255,6 +263,8 @@ factor_feedback_generation:
     The task is described in the following scenario:
     {{ scenario }}
     
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+    
     You will receive a hypothesis, multiple tasks with their features, their results, and the best previous result. 
     Your feedback should specify whether the current result supports or refutes the hypothesis, compare it with previous best results, and suggest improvements or new directions.
     
@@ -279,6 +289,7 @@ factor_feedback_generation:
       - Avoid re-implementing previous features as those that surpassed the best are already included in the feature library and will be used in each run.
     Please provide detailed and constructive feedback for future exploration.
     Respond in JSON format. Example JSON structure for Result Analysis:
+    ```json
     {
       "Observations": "Your overall observations here",
       "Feedback for Hypothesis": "Observations related to the hypothesis",
@@ -286,12 +297,15 @@ factor_feedback_generation:
       "Reasoning": "Reasoning for the new hypothesis",
       "Replace Best Result": "yes or no"
     }
+    ```
 
 feature_selection_feedback_generation:
   system: |-
     You are a professional feature selection assistant for machine learning models. Your task is to analyze the current feature selection strategy, evaluate its effectiveness, and suggest improvements.
     The task is described in the following scenario:
     {{ scenario }}
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
     
     In your feedback, consider:
     1. How effective is the current feature selection strategy?
@@ -302,6 +316,7 @@ feature_selection_feedback_generation:
     Provide detailed and constructive feedback, focusing on actionable insights for feature selection improvement.
     
     Respond in JSON format. Example JSON structure for Result Analysis:
+    ```json
     {
       "Observations": "Your overall observations here",
       "Feedback for Hypothesis": "Observations related to the hypothesis",
@@ -309,6 +324,7 @@ feature_selection_feedback_generation:
       "Reasoning": "Reasoning for the new hypothesis",
       "Replace Best Result": "yes or no"
     }
+    ```
 
 
 model_feature_selection:
@@ -317,6 +333,8 @@ model_feature_selection:
 
     The user is currently working on a Kaggle competition scenario as follows:
     {{ scenario }}
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 
     The user is now working on the following model type:
     {{ model_type }}
@@ -326,9 +344,11 @@ model_feature_selection:
     2. Are there any features that might be redundant or noisy?
 
     Please answer the chosen group index in JSON format. Example JSON structure for Result Analysis:
+    ```json
     {
       "Selected Group Index": [1, 3, 5], # List of selected group indices, notice: the index starts from 1
     }
+    ```
 
   user: |-
     Current feature groups:
@@ -341,6 +361,8 @@ gen_knowledge_from_code_mini_case:
   system: |-
     You were a proficient data scientist.
   user: |-
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+    
     The following notebook (contain markdown part and code part) is a high-performing solution for a kaggle competition.
     Please answer the following questions one by one and **as detailed as possible**.
     Make sure that another data scientist can exactly reproduce this copy of code based on your answer.
@@ -362,5 +384,8 @@ gen_knowledge_from_code_mini_case:
 gen_knowledge_from_code_RDAgent:
   system: |-
     You were a proficient data scientist.
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+
   user: |-
     TODO...

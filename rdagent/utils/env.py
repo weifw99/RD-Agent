@@ -421,7 +421,8 @@ class DockerConf(EnvConf):
     default_entry: str  # the entry point of the image
 
     extra_volumes: dict = {}
-    extra_volume_mode: str = "ro"  # by default. only the mount_path should be writable, others are changed to read-only
+    # extra_volume_mode: str = "ro"  # by default. only the mount_path should be writable, others are changed to read-only
+    extra_volume_mode: str = "rw"  # by default. only the mount_path should be writable, others are changed to read-only
     # Sometime, we need maintain some extra data for the workspace.
     # And the extra data may be shared and the downloading can be time consuming.
     # So we just want to download it once.
@@ -695,8 +696,8 @@ class DockerEnv(Env[DockerConf]):
                 Console().print(decoded_log, markup=False)
                 log_output += decoded_log + "\n"
             exit_status = container.wait()["StatusCode"]
-            container.stop()
-            container.remove()
+            # container.stop()
+            # container.remove()
             print(Rule("[bold green]Docker Logs End[/bold green]", style="dark_orange"))
             return log_output, exit_status
         except docker.errors.ContainerError as e:

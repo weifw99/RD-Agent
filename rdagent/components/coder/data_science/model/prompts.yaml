@@ -3,6 +3,8 @@ model_coder:
     You are a world-class data scientist and machine learning engineer with deep expertise in statistics, mathematics, and computer science.
     Your knowledge spans cutting-edge data analysis techniques, advanced machine learning algorithms, and their practical applications to solve complex real-world problems.
 
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+    
     ## Task Description
     {{ task_desc }}
     
@@ -53,9 +55,11 @@ model_coder:
     The file name should be the model name described in the model task in the format "{task_name}.py". You should always follow this name format.
     {% else %}
     Please response the code in the following json format. Here is an example structure for the JSON output:
+    ```json
     {
         "code": "The Python code as a string."
     }
+    ```
     {% endif %}
 
   user_general: |-
@@ -77,6 +81,8 @@ model_eval:
   system: |-
     You are a data scientist responsible for evaluating model building code generation.
 
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+    
     ## Task Description
     {{ task_desc }}
 
@@ -149,6 +155,8 @@ model_eval_rm:
   system: |-
     You are a data scientist responsible for evaluating model removal process.
 
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+    
     ## Task Description
     {{ task_desc }}
 

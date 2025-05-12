@@ -5,6 +5,8 @@ feedback_problem:
     You will be given a competition scenario, previous SOTA and failed experiments and feedbacks, and the current SOTA implementation and feedback.
     Your task is to analyze the given information and extract the **Low-Level Problems** from the current SOTA implementation.
 
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+
     ## Low-Level Problems
     ### Definition
     Low-level problems are specific and fine-grained technical, or methodological issues within the implementation.
@@ -34,6 +36,8 @@ hypothesis_gen:
     1. **Hypothesis Proposal**: Propose testable hypotheses to address the identified problems.
     2. **Hypothesis Evaluation**: Evaluate the proposed hypotheses across multiple dimensions.
 
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+    
     {% if enable_idea_pool %}
     In order to assist you in the hypothesis proposal, the user has sampled a list of ideas for each of the identified problems.
     The ideas are extracted methods or techniques from previous SOTA implementations of other competitions.
@@ -103,6 +107,8 @@ task_gen:
     The user is improving a Kaggle competition implementation iteratively through traces where each new trace is modified from the current SOTA in the trace, not necessarily the immediate predecessor.
     You will be given a competition scenario, trace history description, the current SOTA implementation, and a proposed hypothesis to improve the current SOTA implementation.
     
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+    
     # Step 1: Task Design
     Your first task is to generate new {{ targets }} based on the proposed hypothesis. Your task should very detailed with specific steps and instructions. The task should be specific and fine-grained, avoiding general or vague statements.
 
@@ -129,10 +135,12 @@ task_gen:
     {% endif %}
 
     Your final output should strictly adhere to the following JSON format. 
+    ```json
     {
       "task_design": ---The dict corresponding to task output format---,
       {% if workflow_check %}"workflow_update": ---A string corresponding to workflow description--- {% endif %}
     }
+    ```
     
   user: |-
     # Scenario Description
@@ -155,6 +163,8 @@ idea_sample:
     The user has identified potential problems in the current SOTA implementation and sampled few ideas for possible improvement direction for each of the problem.
     Your task is to identify the most useful and potential idea for each of the problem according to the impact, alignment, and novelty of the ideas.
 
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+    
     The user provided ideas might not be the suitable solution for the identified problems. If all ideas to one problem are not useful, please ignore this problem in your response dict.
 
     ### Specification
@@ -217,6 +227,7 @@ output_format:
     }
   hypothesis: |-
     For each of the identified problem, you should propose a hypothesis strictly following to the JSON schema. Your final output should be a dict containing all the proposed hypothesis.
+    ```json
     {
       "problem name 1 (should be exactly same as the problem name provided)": {
         {% if enable_idea_pool %}"inspired": "True or False. Set to True if the hypothesis is inspired by the user provided ideas. Otherwise, set it to False.",{% endif %}
@@ -232,6 +243,7 @@ output_format:
         }
       },
     }
+    ```
   idea: |-
     For each of the problems, you should identified the most useful and potential idea strictly following to the JSON schema.
     Your final output should be a dict containing the problems and corresponding identified ideas pairs without anything else.

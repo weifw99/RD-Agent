@@ -4,6 +4,8 @@ scenario_problem:
     The user is creating a Kaggle competition implementation iteratively and this is the first iteration. You will be given the Kaggle competition scenario.
     Your task is to analyze the given information and extract the **Scenario Problems** from the given materials to aid the implementation.
 
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+    
     ## Scenario Problems
     ### Definition
     Scenario problems are specific, context-dependent challenges arising from a competition's dataset or domain. They fall into two categories:
@@ -41,6 +43,8 @@ task_draft:
     In addition, if there are any previous failed experiments, you will receive the task designs and failures. Please read them carefully to have a better understanding.
     Your role is to design a very detailed task with specific steps and instructions to implement competition solution and address identified scenario problems. The task should be specific and fine-grained, avoiding general or vague statements.
 
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+    
     # Task Design
     ## Task Specification
     {{ task_spec }}
@@ -57,9 +61,11 @@ task_draft:
     ##  Task Output Format:
     Design a specific and detailed Pipeline task based on the given competition scenario and scenario problems. The output should be detailed enough to directly implement the corresponding code.
     The output should follow JSON format. The schema is as follows:
+    ```json
     {
         "task_design": "A precise and comprehensive description of the main workflow script (`main.py`).",
     }
+    ```
 
   user: |-
     # Scenario Description

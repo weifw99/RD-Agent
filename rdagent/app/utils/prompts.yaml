@@ -7,6 +7,8 @@ ape:
     You can analyze based on these aspects:
     - Is the question complete (is all the information needed to answer the question provided?)
 
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+    
     The conversation will be provided in the following format:
 
     <question>

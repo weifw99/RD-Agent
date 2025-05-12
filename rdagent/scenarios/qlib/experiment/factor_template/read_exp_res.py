@@ -2,6 +2,7 @@ import pickle
 from pathlib import Path
 
 import pandas as pd
+import numpy as np
 import qlib
 from mlflow.entities import ViewType
 from mlflow.tracking import MlflowClient

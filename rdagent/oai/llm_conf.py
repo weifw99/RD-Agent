@@ -63,7 +63,7 @@ class LLMSettings(ExtendedBaseSettings):
     chat_token_limit: int = (
         100000  # 100000 is the maximum limit of gpt4, which might increase in the future version of gpt
     )
-    default_system_prompt: str = "You are an AI assistant who helps to answer user's questions."
+    default_system_prompt: str = "You are an AI assistant who helps to answer user's questions.\n输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。\n"
     system_prompt_role: str = "system"
     """Some models (like o1) do not support the 'system' role.
     Therefore, we make the system_prompt_role customizable to ensure successful calls."""
@@ -115,6 +115,8 @@ class LLMSettings(ExtendedBaseSettings):
     chat_azure_deepseek_key: str = ""
 
     chat_model_map: dict[str, dict[str, str]] = {}
+
+    litellm_config_path: str = ''
 
 
 LLM_SETTINGS = LLMSettings()

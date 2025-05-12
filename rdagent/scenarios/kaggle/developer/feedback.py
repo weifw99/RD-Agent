@@ -149,7 +149,7 @@ class KGExperiment2Feedback(Experiment2Feedback):
             user_prompt=usr_prompt,
             system_prompt=sys_prompt,
             json_mode=True,
-            json_target_type=Dict[str, str | bool | int],
+            json_target_type=Dict[str, str | bool | int | list[str | int | float | bool | Dict[str, str | int | float | bool ]]],
         )
 
         response_json = json.loads(response)
