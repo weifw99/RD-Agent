@@ -1,5 +1,5 @@
 import json
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Union
 
 import pandas as pd
 
@@ -177,7 +177,7 @@ class DSProposalV1ExpGen(ExpGen):
                         # NOTE: corner cases.
                         # workflow_update may be a string
                         # model could have 2 level nested dict.
-                        json_target_type=dict[str, dict[str, str | dict] | str],
+                        json_target_type=dict[str, Union[dict[str, Union[str , dict]] , str]],
                     )
                 )
                 assert "hypothesis_proposal" in resp_dict, "Hypothesis proposal not provided."
@@ -305,7 +305,7 @@ class DSProposalV2ExpGen(ExpGen):
             user_prompt=user_prompt,
             system_prompt=sys_prompt,
             json_mode=True,
-            json_target_type=Dict[str, Dict[str, str | Dict[str, str | int]]],
+            json_target_type=Dict[str, Dict[str, Union[str , Dict[str, Union[str , int]]]]],
         )
         resp_dict = json.loads(response)
         return resp_dict
@@ -409,7 +409,7 @@ class DSProposalV2ExpGen(ExpGen):
             user_prompt=user_prompt,
             system_prompt=sys_prompt,
             json_mode=True,
-            json_target_type=Dict[str, str | Dict[str, str]],
+            json_target_type=Dict[str, Union[str , Dict[str, str]]],
         )
         task_dict = json.loads(response)
         task_design = task_dict.get("task_design", {})

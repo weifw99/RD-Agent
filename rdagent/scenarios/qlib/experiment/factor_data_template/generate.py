@@ -6,7 +6,7 @@ from qlib.data import D
 
 instruments = D.instruments()
 fields = ["$open", "$close", "$high", "$low", "$volume", "$factor"]
-data = D.features(instruments, fields, freq="day").swaplevel().sort_index().loc["2008-12-29":].sort_index()
+data = D.features(instruments, fields, freq="day").swaplevel().sort_index().loc["2010-01-01":].sort_index()
 
 data.to_hdf("./daily_pv_all.h5", key="data")
 

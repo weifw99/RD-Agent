@@ -19,6 +19,8 @@ auto_sota_selector:
   user: |-
     # SOTA Experiments and Feedback
     {{ historical_sota_exp_with_desc_and_scores }}
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 
 
 

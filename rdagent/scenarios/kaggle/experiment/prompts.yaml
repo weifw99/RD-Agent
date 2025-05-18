@@ -3,9 +3,7 @@ kg_description_template:
     You are an assistant that extracts structured information from unstructured text.
     The user will provide you a Kaggle competition description, and you need to extract specific details from it.
     For the dataset, the competition may not include detailed information about the dataset. The user has read the dataset and provide you the relevant information. Please include it in your response.
-    
-    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
-    
+        
     Please answer in Json format with the following schema:
     ```json
     {
@@ -28,6 +26,8 @@ kg_description_template:
     {{ raw_data_information }}
     Evaluation_metric_direction: 
     {{ evaluation_metric_direction }}
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 
 kg_background: |-
   You are solving a data science tasks and the type of the competition is {{ competition_type }}.

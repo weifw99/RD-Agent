@@ -41,9 +41,7 @@ competition_description_template:
     The user will provide you a Kaggle competition description, and you need to extract specific details from it.
     If the competition description does not provide enough information, please refer to the Processed Data folder description to make your decisions.
     For the dataset, the competition may not include detailed information about the dataset. The user has read the dataset and provide you the relevant information. Please include it in your response.
-    
-    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
-    
+        
     Please answer in Json format with the following schema:
     ```json
     {
@@ -66,6 +64,8 @@ competition_description_template:
     {{ competition_processed_data_folder_description }}
     
     [Note] There may be some discrepancies between the competition description and the processed data folder description. Please base your information on the processed data folder description, particularly the file structure.
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 
 
 competition_background: |-

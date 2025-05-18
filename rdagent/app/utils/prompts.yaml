@@ -6,8 +6,6 @@ ape:
     Please suggest how to improve the question.
     You can analyze based on these aspects:
     - Is the question complete (is all the information needed to answer the question provided?)
-
-    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
     
     The conversation will be provided in the following format:
 
@@ -45,6 +43,8 @@ ape:
     <answer>
       {{answer}}
     </answer>
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 
   optional: |-
     If you want to suggest modification on  the question. Please follow the *SEARCH/REPLACE block* Rules!!!! It is optional.

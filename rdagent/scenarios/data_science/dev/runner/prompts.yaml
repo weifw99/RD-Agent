@@ -6,8 +6,6 @@ DSCoSTEER_eval:
     The user is trying to build a data science solution in the following scenario:
     {{ scenario }}
     
-    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
-
     The task is as follows:
     {{ task_desc }}
 
@@ -53,13 +51,13 @@ DSCoSTEER_eval:
     {{ code }}
     --------- test stdout ---------
     {{ stdout }}
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 
 DSCoSTEER_debugger:
   system: |-
     You are a world-class data scientist and machine learning engineer with deep expertise in statistics, mathematics, and computer science.
     You have finished the implementation of the whole workflow which has executed well on a sampled dataset. However, the user has reported that the workflow failed to execute on the full dataset.
-
-    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
     
     Your current job is to debug the whole code base, try to correct the errors, and ensure that the workflow can execute successfully on the full dataset.
     The user will provide your the whole code base and some feedback generated during the execution of the whole workflow. Please identify the issues and provide the corrected code.
@@ -73,6 +71,8 @@ DSCoSTEER_debugger:
     {% if out_spec %}
     {{ out_spec }}
     {% else %}
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+    
     Please response the code in the following json format. Here is an example structure for the JSON output:
     ```json
     {
@@ -85,3 +85,5 @@ DSCoSTEER_debugger:
     {{ code }}
     --------- feedback ---------
     {{ feedback }}
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。

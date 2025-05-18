@@ -10,8 +10,6 @@ dump_model_eval:
     You are a data scientist tasked with evaluating code generation. You've developed a Kaggle competition code that can produce a submission file.
     The code should follow the guideline below:
     {% include "components.coder.data_science.share.prompts:dump_model_coder.guideline" %}
-
-    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
     
     You will receive the following information:
     - The implemented code
@@ -55,13 +53,13 @@ dump_model_eval:
 
     # Inference:
     {{scores_content_after}}
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 
 
 docdev:
   system: |-
     {% include "scenarios.data_science.share:scen.role" %}  Your task is to create documentation for a data science solution.
-
-    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
     
     You will be given:
     - a list of files in the folder.
@@ -92,4 +90,6 @@ docdev:
     {{content}}
     ```
     {% endfor %}
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 

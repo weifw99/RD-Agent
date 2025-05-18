@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional, cast
+from typing import Any, Optional, cast, Dict
 
 import pytz
 from pydantic import TypeAdapter
@@ -433,7 +433,7 @@ class APIBackend(ABC):
 
         all_response = ""
         new_messages = deepcopy(messages)
-        try_n = 1
+        try_n = 10
         for i_ in range(try_n):  # for some long code, 3 times may not enough for reasoning models
             if "json_mode" in kwargs:
                 del kwargs["json_mode"]
@@ -452,23 +452,45 @@ class APIBackend(ABC):
                         json.loads(all_response)
                     except json.decoder.JSONDecodeError as e:
                         logger.warning(f"_create_chat_completion_auto_continue json loads Failed to parse json: {e}, try to parse json in code block")
-                        match_json = re.search(r"```json(.*)```", all_response, re.DOTALL)
-                        from rdagent.oai.llm_utils import extract_json_objects
+                        # 移除<think></think>标签内的数据
+                        from rdagent.oai.llm_utils import remove_tag_with_content
+                        all_response = remove_tag_with_content(all_response, 'think')
+
+                        from rdagent.oai.llm_utils import extract_json_objects, parse_json_result
                         json_result = extract_json_objects(all_response)
+                        json_str = parse_json_result(all_response)
+                        # match_json = re.search(r"```json(.*)```", all_response, re.DOTALL)
                         # logger.warning(f"_create_chat_completion_auto_continue json search, match_json: {match_json}, match: {match}")
-                        if match_json:
-                            all_response = match_json.group(0)
-                            all_response = all_response.replace('```json', '').replace('```', '').strip()
-                            print(f"match_json all_response: {all_response}")
-                        elif len(json_result)>0:
-                            all_response = str(json_result[0])
+                        # if match_json:
+                        #     all_response = match_json.group(0)
+                        #     all_response = all_response.replace('```json', '').replace('```', '').strip()
+                        #     print(f"match_json all_response: {all_response}")
+                        #     if not all_response.endswith('}'):
+                        #         all_response = parse_json_result(all_response)
+                        if len(json_str) > 0:
+                            all_response = json_str
+                            print(f"match_parse_json all_response: {all_response}")
+                        elif len(json_result) > 0:
+                            all_response = str(json_result[len(json_result)-1])
                             print(f"json_result all_response: {all_response}")
                         else:
                             all_response = all_response
+
+                        # 移除尾随逗号（包括对象和数组中的）
+                        from rdagent.oai.llm_utils import clean_json_str
+                        all_response = clean_json_str(all_response)
+
                         logger.warning(f"_create_chat_completion_auto_continue json loads all response: {all_response}")
                         # json.loads(all_response)
                 if json_target_type is not None:
-                    TypeAdapter(json_target_type).validate_json(all_response)
+                    logger.warning(f"validate_json start _create_chat_completion_auto_continue , json_target_type: {json_target_type}, all_response: {all_response}")
+                    match = re.search(r'"code": "(.*)"\s*}', all_response, re.DOTALL)
+                    if json_target_type == Dict[str, str] and match:
+                        logger.warning(f"validate_json : not execute TypeAdapter json_target_type:{json_target_type}, match:{match}")
+                    else:
+                        logger.warning(f"validate_json : execute TypeAdapter json_target_type:{json_target_type}, match:{match}")
+                        TypeAdapter(json_target_type).validate_json(all_response)
+                    logger.warning(f"validate_json end _create_chat_completion_auto_continue , json_target_type: {json_target_type}, all_response: {all_response}")
                 if self.dump_chat_cache:
                     self.cache.chat_set(input_content_json, all_response)
                 return all_response

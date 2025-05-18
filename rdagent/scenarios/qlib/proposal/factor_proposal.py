@@ -91,12 +91,14 @@ class QlibFactorHypothesis2Experiment(FactorHypothesis2Experiment):
                 # 将单个反斜杠替换为四个反斜杠（适用于 LaTeX 公式在 JSON 中的表示）
                 return re.sub(r'\\', r'\\\\', s)
 
-            response_dict = escape_latex_for_json(response)
+            response = escape_latex_for_json(response)
+            response_dict = json.loads(response)
         print(f"{'##' * 10} QlibFactorHypothesis2Experiment.convert_response：response_dict: {response_dict}")
 
         tasks = []
 
         for factor_name in response_dict:
+            print(f"{'##' * 10} QlibFactorHypothesis2Experiment.convert_response：factor_name: {factor_name}, factor value: {type(response_dict[factor_name])} == {response_dict[factor_name]}")
             description = response_dict[factor_name]["description"]
             formulation = response_dict[factor_name]["formulation"]
             variables = response_dict[factor_name]["variables"]

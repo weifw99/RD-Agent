@@ -42,15 +42,12 @@ extract_model_formulation_system: |-
     }
     ```
     such format content should be begin with ```json and end with ``` and the content should be in json format.
-    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 
 evolving_strategy_model_coder:
     system: |-
         User is trying to implement some pytorch models in the following scenario:
         {{ scenario }}
-        
-        输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
-        
+                
         Your code is expected to align the scenario in any form which means The user needs to get the prediction of the model based on the input data.
 
         To help you write the correct code, the user might provide multiple information that helps you write the correct code:
@@ -77,6 +74,7 @@ evolving_strategy_model_coder:
         =====Feedback to the former implementation=====
         {{ queried_former_failed_knowledge[-1].feedback }}
         {% endif %}
+        输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
         
         Please response the code in the following json format. Here is an example structure for the JSON output:
         ```json
@@ -108,6 +106,8 @@ evolving_strategy_model_coder:
         {{ former_failed_knowledge.feedback }}
         {% endfor %}
         {% endif %}
+        
+        输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 
 evaluator_code_feedback:
     system: |-
@@ -115,8 +115,6 @@ evaluator_code_feedback:
         {{ scenario }}
         User will provide you the information of the model.
         
-        输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
-
         Your job is to check whether user's code is align with the model information and the scenario.
         The user will provide the source python code and the execution error message if execution failed.
         The user might provide you the ground truth code for you to provide the critic. You should not leak the ground truth code to the user in any form but you can use it to provide the critic.
@@ -149,6 +147,8 @@ evaluator_code_feedback:
         --------------Ground truth Python code:---------------
         {{ gt_code }}
         {% endif %}
+        
+        输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 
 
 evaluator_final_feedback:
@@ -157,8 +157,6 @@ evaluator_final_feedback:
         {{ scenario }}
         User has finished evaluation and got some feedback from the evaluator.
         The evaluator run the code and get the output and provide several feedback regarding user's code and code output. You should analyze the feedback and considering the scenario and model description to give a final decision about the evaluation result. The final decision concludes whether the model is implemented correctly and if not, detail feedback containing reason and suggestion if the final decision is False.
-
-        输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
         
         The implementation final decision is considered in the following logic:
         1. If the value and the ground truth value are exactly the same under a small tolerance, the implementation is considered correct.
@@ -182,3 +180,5 @@ evaluator_final_feedback:
         {{ model_code_feedback }}
         --------------Model value feedback:---------------
         {{ model_value_feedback }}
+        
+        输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。

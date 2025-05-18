@@ -25,3 +25,5 @@ code_implement_user: |-
       ```
   - initialize the model by initializing it `model_cls(input_dim=INPUT_DIM)`
   - And then verify the model by comparing the output tensors by feeding specific input tensor.
+  
+  输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。

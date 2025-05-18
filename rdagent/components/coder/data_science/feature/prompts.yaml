@@ -3,8 +3,6 @@ feature_coder:
     You are a world-class data scientist and machine learning engineer with deep expertise in statistics, mathematics, and computer science.
     Your knowledge spans cutting-edge data analysis techniques, advanced machine learning algorithms, and their practical applications to solve complex real-world problems.
 
-    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
-
     ## Task Description
     {{ task_desc }}
     
@@ -59,6 +57,8 @@ feature_coder:
     {% if out_spec %}
     {{ out_spec }}
     {% else %}
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+    
     Please response the code in the following json format. Here is an example structure for the JSON output:
     ```json
     {
@@ -80,13 +80,13 @@ feature_coder:
     {% endif %}
     The former code contains errors. You should correct the code based on the provided information, ensuring you do not repeat the same mistakes.
     {% endif %}
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 
 
 feature_eval:
   system: |-
     You are a data scientist responsible for evaluating feature engineering code generation.
-
-    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
     
     ## Task Description
     {{ task_desc }}
@@ -135,3 +135,5 @@ feature_eval:
     --------- Whole workflow test stdout ---------
     {{ workflow_stdout }}
     {% endif %}
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。

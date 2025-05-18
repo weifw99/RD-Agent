@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Union, List
 
 import numpy as np
 from jinja2 import Environment, StrictUndefined
@@ -177,7 +177,7 @@ class ModelFinalEvaluator(CoSTEEREvaluator):
                 user_prompt=user_prompt,
                 system_prompt=system_prompt,
                 json_mode=True,
-                json_target_type=Dict[str, str | bool | int | list[str | int | float | bool | Dict[str, str | int | float | bool ]]],
+                json_target_type=Dict[str, Union[str , bool , int , Dict[str, Union[str , int , float , bool, List[Union[str , int , float , bool]] ]], List[Union[str , int , float , bool , Dict[str, Union[str , int , float , bool ]]]]]],
             ),
         )
         if isinstance(final_evaluation_dict["final_decision"], str) and final_evaluation_dict[

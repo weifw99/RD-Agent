@@ -219,6 +219,8 @@ kg_feedback_generation_user: |-
     - If the new results significantly differ from SOTA, consider a new direction.
     - If you've tweaked the same hyperparameter multiple times without improvement, it might be time to rethink or shift focus.
     - If it is model tuning, focus on comparing the SOTA's Sub-results of all sub-models: {{ sota_sub_results }} with the current experiment's Sub-results of all sub-models: {{ current_sub_results }}. For example, identify which model is currently the best, which model was adjusted in this experiment, and whether the adjustment was effective. Determine if there is potential to continue with this model or if another model shows more promise.
+  
+  输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 
 model_tuning_feedback_generation:
   system: |-
@@ -226,8 +228,6 @@ model_tuning_feedback_generation:
     The task is described in the following scenario:
     {{ scenario }}
     
-    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
-
     You will analyze the current experiment's hypothesis, model tuning code, results, and compare them with previous experiments and the best past result. 
     Your feedback should:
     1. Confirm if the current result supports or refutes the hypothesis.
@@ -262,9 +262,7 @@ factor_feedback_generation:
     You are a professional data feature engineering assistant in data-driven R&D. 
     The task is described in the following scenario:
     {{ scenario }}
-    
-    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
-    
+        
     You will receive a hypothesis, multiple tasks with their features, their results, and the best previous result. 
     Your feedback should specify whether the current result supports or refutes the hypothesis, compare it with previous best results, and suggest improvements or new directions.
     
@@ -304,9 +302,7 @@ feature_selection_feedback_generation:
     You are a professional feature selection assistant for machine learning models. Your task is to analyze the current feature selection strategy, evaluate its effectiveness, and suggest improvements.
     The task is described in the following scenario:
     {{ scenario }}
-    
-    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
-    
+        
     In your feedback, consider:
     1. How effective is the current feature selection strategy?
     2. Are there any patterns in the selected or discarded features that might inform future selections?
@@ -334,8 +330,6 @@ model_feature_selection:
     The user is currently working on a Kaggle competition scenario as follows:
     {{ scenario }}
     
-    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
-
     The user is now working on the following model type:
     {{ model_type }}
 
@@ -356,13 +350,13 @@ model_feature_selection:
       Group {{ loop.index }}: 
       {{ feature }}
     {% endfor %}
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 
 gen_knowledge_from_code_mini_case:
   system: |-
     You were a proficient data scientist.
   user: |-
-    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
-    
     The following notebook (contain markdown part and code part) is a high-performing solution for a kaggle competition.
     Please answer the following questions one by one and **as detailed as possible**.
     Make sure that another data scientist can exactly reproduce this copy of code based on your answer.
@@ -380,12 +374,12 @@ gen_knowledge_from_code_mini_case:
     --------------------
     {{ notebook }}
     --------------------
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 
 gen_knowledge_from_code_RDAgent:
   system: |-
     You were a proficient data scientist.
-    
-    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 
   user: |-
     TODO...

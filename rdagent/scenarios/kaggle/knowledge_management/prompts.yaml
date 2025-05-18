@@ -3,9 +3,7 @@ extract_kaggle_knowledge_prompts:
     You are a Kaggle competition expert with extensive experience in analyzing high-ranking Kaggle notebooks and competition strategies. 
     Your task is to summarize or infer key information such as the competition name, task type, and specific techniques employed in the notebook or strategy.
     For each provided content, you are expected to extract valuable insights and organize the analysis in the structured format outlined below.
-    
-    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
-    
+        
     Please provide the analysis in the following JSON format:
     ```json
     {
@@ -21,15 +19,15 @@ extract_kaggle_knowledge_prompts:
   
   user: |-
     High-ranking Kaggle notebooks or competition strategies: {{ file_content }}
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 
 extract_kaggle_knowledge_from_feedback_prompts:
   system: |-
     You are a Kaggle competition expert with extensive experience in analyzing Kaggle notebooks and competition strategies. 
     Your task is to summarize or infer key information such as the competition name, task type, and specific techniques employed in the notebook or strategy.
     For each provided content, you are expected to extract valuable insights and organize the analysis in the structured format outlined below.
-    
-    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
-    
+        
     Please provide the analysis in the following JSON format:
     ```json
     {
@@ -45,6 +43,8 @@ extract_kaggle_knowledge_from_feedback_prompts:
   
   user: |-
     Experiment strategy: {{ experiment_strategy }}
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 
 
 extract_knowledge_graph_from_document:
@@ -55,8 +55,6 @@ extract_knowledge_graph_from_document:
     {% else %}
       The user is working on general data science competitions on Kaggle.
     {% endif %}
-
-    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
     
     The user has identified valuable documents from other experts and requires your help to extract meaningful insights from them.
 
@@ -93,14 +91,17 @@ extract_knowledge_graph_from_document:
   
   user: |-
     Document content: {{ document_content }}
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 
 refine_with_LLM:
   system: |-
     You are an experienced data science expert and an assistant, helping the user evaluate and improve content.
-    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
-  
+
   user: |-
     Here is the target: {{ target }}. 
     Please evaluate whether the following RAG query result aligns with the target. 
     If it does not, simply respond with "There are no relevant RAG results to support."
     RAG query result: {{ text }}.
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。

@@ -165,16 +165,29 @@ class FactorMultiProcessEvolvingStrategy(MultiProcessEvolvingStrategy):
                 queried_similar_error_knowledge_to_render = queried_similar_error_knowledge_to_render[:-1]
         for _ in range(10):
             try:
-                code = json.loads(
-                    APIBackend(
-                        use_chat_cache=FACTOR_COSTEER_SETTINGS.coder_use_cache
-                    ).build_messages_and_create_chat_completion(
-                        user_prompt=user_prompt,
-                        system_prompt=system_prompt,
-                        json_mode=True,
-                        json_target_type=Dict[str, str],
-                    )
-                )["code"]
+                response_str = APIBackend(
+                    use_chat_cache=FACTOR_COSTEER_SETTINGS.coder_use_cache
+                ).build_messages_and_create_chat_completion(
+                    user_prompt=user_prompt,
+                    system_prompt=system_prompt,
+                    json_mode=True,
+                    json_target_type=Dict[str, str],
+                )
+
+                try:
+                    code = json.loads(response_str)["code"]
+                except json.JSONDecodeError:
+                    print(f"{'##' * 10} FactorMultiProcessEvolvingStrategy.implement_one_task：JSON 解析错误, json response: {response_str}")
+
+                    # 提取 code 内容（中间双引号内的部分）
+                    import re
+                    match = re.search(r'"code": "(.*)"\s*}', response_str, re.DOTALL)
+                    if match:
+                        code_raw = match.group(1)
+                        # 替换字符串中的特殊字符为合法 JSON 字符串格式
+                        code = code_raw
+                        print(f"match_json  code fixed code: {code}")
+
                 return code
             except json.decoder.JSONDecodeError:
                 pass

@@ -21,3 +21,5 @@ filter_redundant_text:
     {{ stdout }}
 
     Check if the text contains training log messages, repeated warning messages, and progress bar patterns. If patterns are found, provide a list of regex patterns to filter them. Otherwise, indicate that substitution is not needed.
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。

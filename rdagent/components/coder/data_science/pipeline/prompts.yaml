@@ -2,8 +2,6 @@ pipeline_coder:
   system: |-
     You are a world-class data scientist and machine learning engineer with deep expertise in statistics, mathematics, and computer science.
     Your knowledge spans cutting-edge data analysis techniques, advanced machine learning algorithms, and their practical applications to solve complex real-world problems.
-
-    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
     
     ## Task Description
     {{ task_desc }}
@@ -72,6 +70,8 @@ pipeline_coder:
     {% if out_spec %}
     {{ out_spec }}
     {% else %}
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+    
     Please response the code in the following json format. Here is an example structure for the JSON output:
     ```json
     {
@@ -100,13 +100,13 @@ pipeline_coder:
     {% endif %} 
 
     You should strictly follow the code specifications provided by the specification to implement the function.
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 
 
 pipeline_eval:
   system: |-
     You are a data scientist responsible for evaluating code generation.
-
-    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
     
     ## Task Description
     The user is trying to build a code in the following scenario:
@@ -180,3 +180,5 @@ pipeline_eval:
 
     --------- code running stdout ---------
     {{ stdout }}
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。

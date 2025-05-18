@@ -2,7 +2,7 @@ import io
 import json
 from abc import abstractmethod
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Union, List
 
 import pandas as pd
 from jinja2 import Environment, StrictUndefined
@@ -217,7 +217,7 @@ class FactorOutputFormatEvaluator(FactorEvaluator):
                     user_prompt=gen_df_info_str,
                     system_prompt=system_prompt,
                     json_mode=True,
-                    json_target_type=Dict[str, str | bool | int | list[str | int | float | bool | Dict[str, str | int | float | bool ]]],
+                    json_target_type=Dict[str, Union[str , bool , int , Dict[str, Union[str , int , float , bool, List[Union[str , int , float , bool]] ]], List[Union[str , int , float , bool , Dict[str, Union[str , int , float , bool ]]]]]],
                 )
                 resp_dict = json.loads(resp)
                 resp_dict["output_format_decision"] = str(resp_dict["output_format_decision"]).lower() in ["true", "1"]
@@ -561,7 +561,7 @@ class FactorFinalDecisionEvaluator(FactorEvaluator):
                         system_prompt=system_prompt,
                         json_mode=True,
                         seed=attempts,  # in case of useless retrying when cache enabled.
-                        json_target_type=Dict[str, str | bool | int | list[str | int | float | bool | Dict[str, str | int | float | bool ]]],
+                        json_target_type=Dict[str, Union[str , bool , int , Dict[str, Union[str , int , float , bool, List[Union[str , int , float , bool]] ]], List[Union[str , int , float , bool , Dict[str, Union[str , int , float , bool ]]]]]],
                     ),
                 )
                 final_decision = final_evaluation_dict["final_decision"]

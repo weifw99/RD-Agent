@@ -2,9 +2,7 @@
 evaluator_code_feedback_v1_system: |-
   User is trying to implement some factors in the following scenario:
   {{ scenario }}
-  
-  输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
-  
+    
   User will provide you the information of the factor.
 
   Your job is to check whether user's code is align with the factor and the scenario.
@@ -39,13 +37,13 @@ evaluator_code_feedback_v1_user: |-
   --------------Ground truth Python code:---------------
   {{ gt_code }}
   {% endif %}
+  
+  输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 
 evolving_strategy_factor_implementation_v1_system: |-
   User is trying to implement some factors in the following scenario:
   {{ scenario }}
-  
-  输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
-  
+    
   Your code is expected to align the scenario in any form which means The user needs to get the exact factor values with your code as expected.
  
   To help you write the correct code, the user might provide multiple information that helps you write the correct code:
@@ -62,6 +60,7 @@ evolving_strategy_factor_implementation_v1_system: |-
   =====Feedback to the former implementation=====
   {{ queried_former_failed_knowledge[-1].feedback }}
   {% endif %}
+  输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 
   Please response the code in the following json format. Here is an example structure for the JSON output:
   ```json
@@ -109,13 +108,13 @@ evolving_strategy_factor_implementation_v2_user: |-
   =====Feedback to your latest attempt=====
   {{ latest_attempt_to_latest_successful_execution.feedback }}
   {% endif %}
+  
+  输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 
 evolving_strategy_error_summary_v2_system: |-
   User is trying to implement some factors in the following scenario:
   {{ scenario }}
-  
-  输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
-  
+    
   User is doing the following task: 
   {{factor_information_str}}
 
@@ -142,14 +141,14 @@ evolving_strategy_error_summary_v2_user: |-
   {{ similar_error_knowledge[1].implementation.all_codes }}
   {% endfor %}
   {% endif %}
+  
+  输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 
 
 select_implementable_factor_system: |-
   User is trying to implement some factors in the following scenario:
   {{ scenario }}
-  
-  输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
-  
+    
   Your job is to help the user select the easiest-to-implement factors. Some factors may be difficult to implement due to a lack of information or excessive complexity. The user will provide the number of factors you should pick and information about the factors, including their descriptions, formulas, and variable explanations.
   User will provide you the former attempt to implement the factor and the feedback to the implementation. You need to carefully review your previous attempts. Some factors have been repeatedly tried without success. You should consider discarding these factors.
   Please analyze the difficulties of the each factors and provide the reason and response the indices of selected implementable factor in the json format. Here is an example structure for the JSON output:
@@ -180,13 +179,13 @@ select_implementable_factor_user: |-
   {% endfor %}
   {% endif %}
   {% endfor %}
+  
+  输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 
 evaluator_output_format_system: |-
   User is trying to implement some factors in the following scenario:
   {{ scenario }}
-  
-  输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
-  
+    
   User will provide you the format of the output. Please help to check whether the output is align with the format.
   Please respond in the JSON format. Here is an example structure for the JSON output:
   ```json
@@ -200,9 +199,7 @@ evaluator_output_format_system: |-
 evaluator_final_decision_v1_system: |-
   User is trying to implement some factors in the following scenario:
   {{ scenario }}
-  
-  输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
-  
+    
   User has finished evaluation and got some feedback from the evaluator.
   The evaluator run the code and get the factor value dataframe and provide several feedback regarding user's code and code output. You should analyze the feedback and considering the scenario and factor description to give a final decision about the evaluation result. The final decision concludes whether the factor is implemented correctly and if not, detail feedback containing reason and suggestion if the final decision is False.
 
@@ -228,3 +225,5 @@ evaluator_final_decision_v1_user: |-
   {{ code_feedback }}
   --------------Factor value feedback:---------------
   {{ value_feedback }}
+  
+  输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。

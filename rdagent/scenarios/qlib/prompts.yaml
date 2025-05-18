@@ -141,9 +141,7 @@ factor_feedback_generation:
     The task is described in the following scenario:
 
     {{ scenario }}
-    
-    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
-    
+        
     You will receive a hypothesis, multiple tasks with their factors, their results, and the SOTA result. 
     Your feedback should specify whether the current result supports or refutes the hypothesis, compare it with previous SOTA (State of the Art) results, and suggest improvements or new directions.
     
@@ -223,15 +221,15 @@ factor_feedback_generation:
       - Avoid re-implementing previous factors as those that surpassed SOTA are already included in the factor library and will be used in each run.
 
     Note: Only factors with 'Factor Implementation' as True are implemented and tested in this experiment. If 'Factor Implementation' is False, the hypothesis for that factor cannot be verified in this run.
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
 
 model_feedback_generation:
   system: |-
     You are a professional result analysis assistant. You will receive a result and a hypothesis.
     Your task is to provide feedback on how well the result supports or refutes the hypothesis by judging from the observation of performance increase or decrease.
     Please provide detailed and constructive feedback. Note that as hypothesis evolve, a general trend should be that the model grows larger. 
-    
-    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
-    
+        
     Example JSON Structure for Result Analysis:
     ```json
     {
@@ -285,3 +283,5 @@ model_feedback_generation:
 
     Compare and observe. Which result has a better return and lower risk? If the performance increases, the hypothesis should be considered positive (working). 
     Hence, with the hypotheses, relevant reasoning, and results in mind (comparison), provide detailed and constructive feedback and suggest a new hypothesis. 
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。

@@ -1,6 +1,6 @@
 import json
 import random
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -84,7 +84,7 @@ class AutoSOTAexpSelector(SOTAexpSelector):
                 user_prompt=user_prompt,
                 system_prompt=system_prompt,
                 json_mode=True,
-                json_target_type=Dict[str, str | int],
+                json_target_type=Dict[str, Union[str , int]],
             )
 
             response_dict = json.loads(response)

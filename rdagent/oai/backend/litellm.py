@@ -113,6 +113,7 @@ class LiteLLMAPIBackend(APIBackend):
             **kwargs,
         )
         logger.info(f"{LogColors.GREEN}Using chat model{LogColors.END} {model}", tag="llm_messages")
+        logger.info(f"{LogColors.GREEN}Using chat model{LogColors.END} {model} messages:{messages}")
 
         if LITELLM_SETTINGS.chat_stream:
             logger.info(f"{LogColors.BLUE}assistant:{LogColors.END}", tag="llm_messages")

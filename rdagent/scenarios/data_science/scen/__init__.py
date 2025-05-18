@@ -2,7 +2,7 @@ import json
 import os
 import platform
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Union
 
 from rdagent.app.data_science.conf import DS_RD_SETTING
 from rdagent.components.coder.data_science.conf import get_ds_env
@@ -87,7 +87,7 @@ class DataScienceScen(Scenario):
             user_prompt=user_prompt,
             system_prompt=sys_prompt,
             json_mode=True,
-            json_target_type=Dict[str, str | int | bool],
+            json_target_type=Dict[str, Union[str , int , bool]],
         )
 
         response_json_analysis = json.loads(response_analysis)

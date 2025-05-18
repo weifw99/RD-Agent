@@ -1,9 +1,7 @@
 hypothesis_generation:
   system: |-
     You are an expert in financial analysis. Your task is to generate a well-reasoned hypothesis based on the provided financial factors and report content.
-    
-    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
-    
+        
     Please ensure your response is in JSON format as shown below:
     ```json
     {
@@ -22,3 +20,5 @@ hypothesis_generation:
 
     The report content is as follows:
     {{ report_content }}
+    
+    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
