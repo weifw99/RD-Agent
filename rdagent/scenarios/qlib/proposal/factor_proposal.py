@@ -92,7 +92,20 @@ class QlibFactorHypothesis2Experiment(FactorHypothesis2Experiment):
                 return re.sub(r'\\', r'\\\\', s)
 
             response = escape_latex_for_json(response)
-            response_dict = json.loads(response)
+            import re
+
+            def safe_json_loads(response: str):
+                # 仅替换 JSON 值中的 LaTeX 字符串中的反斜杠（不会影响 JSON key）
+                def escape_latex(match):
+                    return match.group(0).replace("\\", "\\\\")
+
+                # 替换所有 value 中包含 \ 的字段，避免误伤 key
+                response = re.sub(r'(?<="formulation":\s?")[^"]+', escape_latex, response)
+                response = re.sub(r'(?<="description":\s?")[^"]+', escape_latex, response)
+                response = re.sub(r'(?<=".*?":\s?")[^"]+(?=")', escape_latex, response)
+
+                return json.loads(response)
+            response_dict = safe_json_loads(response)
         print(f"{'##' * 10} QlibFactorHypothesis2Experiment.convert_response：response_dict: {response_dict}")
 
         tasks = []
