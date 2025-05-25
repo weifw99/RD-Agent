@@ -129,10 +129,12 @@ if "alpha158_metrics" not in state:
 
 
 def should_display(msg: Message):
+    print("should_display state.excluded_tags ", state.excluded_tags)
     for t in state.excluded_tags:
         if t in msg.tag.split("."):
             return False
 
+    print("should_display type(msg.content).__name__ ", type(msg.content).__name__)
     if type(msg.content).__name__ in state.excluded_types:
         return False
 
@@ -140,10 +142,14 @@ def should_display(msg: Message):
 
 
 def get_msgs_until(end_func: Callable[[Message], bool] = lambda _: True):
+    print("get_msgs_until start: ", end_func,  " state.fs ", state.fs)
     if state.fs:
+        print("get_msgs_until : ", "state.fs ", state.fs)
         while True:
             try:
                 msg = next(state.fs)
+
+                print("get_msgs_until msg: ", msg)
 
                 # new scenario gen this tags, old version UI not have these tags.
                 msg.tag = re.sub(r"\.evo_loop_\d+", "", msg.tag)
@@ -162,6 +168,7 @@ def get_msgs_until(end_func: Callable[[Message], bool] = lambda _: True):
                     state.last_msg = msg
 
                     # Update Summary Info
+                    print("get_msgs_until Update Summary Info====:", tags)
                     if "model runner result" in tags or "factor runner result" in tags or "runner result" in tags:
                         # factor baseline exp metrics
                         if isinstance(state.scenario, QlibFactorScenario) and state.alpha158_metrics is None:
@@ -170,15 +177,15 @@ def get_msgs_until(end_func: Callable[[Message], bool] = lambda _: True):
                             state.alpha158_metrics = sms
 
                         if (
-                            state.lround == 1
-                            and len(msg.content.based_experiments) > 0
-                            and msg.content.based_experiments[-1].result is not None
+                                state.lround == 1
+                                and len(msg.content.based_experiments) > 0
+                                and msg.content.based_experiments[-1].result is not None
                         ):
                             sms = msg.content.based_experiments[-1].result
                             if isinstance(state.scenario, DMModelScenario):
                                 sms.index = ["AUROC"]
                             elif isinstance(
-                                state.scenario, (QlibModelScenario, QlibFactorFromReportScenario, QlibFactorScenario)
+                                    state.scenario, (QlibModelScenario, QlibFactorFromReportScenario, QlibFactorScenario)
                             ):
                                 sms = sms.loc[QLIB_SELECTED_METRICS]
                             sms.name = f"Baseline"
@@ -195,7 +202,7 @@ def get_msgs_until(end_func: Callable[[Message], bool] = lambda _: True):
                             if isinstance(state.scenario, DMModelScenario):
                                 sms.index = ["AUROC"]
                             elif isinstance(
-                                state.scenario, (QlibModelScenario, QlibFactorFromReportScenario, QlibFactorScenario)
+                                    state.scenario, (QlibModelScenario, QlibFactorFromReportScenario, QlibFactorScenario)
                             ):
                                 sms = sms.loc[QLIB_SELECTED_METRICS]
 
@@ -237,9 +244,14 @@ def get_msgs_until(end_func: Callable[[Message], bool] = lambda _: True):
                     # Stop Getting Logs
                     if end_func(msg):
                         break
-            except StopIteration:
+            except StopIteration as e:
                 st.toast(":red[**No More Logs to Show!**]", icon="🛑")
+                import traceback
+                print("get_msgs_until StopIteration:", e)
+                traceback.print_exc()  # 打印完整的异常堆栈信息
                 break
+    print("get_msgs_until end ")
+
 
 
 def refresh(same_trace: bool = False):
@@ -252,9 +264,18 @@ def refresh(same_trace: bool = False):
     else:
         state.fs = FileStorage(state.log_path).iter_msg()
 
+    # for msg in state.fs:
+    #     print('refresh ', msg.tag, type(msg.content) )
+
+    print("refresh same_trace: ", same_trace)
     # detect scenario
     if not same_trace:
-        get_msgs_until(lambda m: not isinstance(m.content, str))
+        print("refresh same_trace: ", same_trace, )
+        get_msgs_until(lambda m: not isinstance(m.content, str | list | dict))
+        if state.last_msg is not None:
+            print("### scenario state.last_msg: ", type(state.last_msg.content), type(state.last_msg) )
+        else:
+            print("### scenario state.last_msg: ", type(state.last_msg) )
         if state.last_msg is None or not isinstance(state.last_msg.content, Scenario):
             st.toast(":red[**No Scenario Info detected**]", icon="❗")
             state.scenario = None
@@ -726,7 +747,7 @@ with st.sidebar:
 
     with st.popover(":orange[**Config⚙️**]", use_container_width=True):
         st.multiselect("excluded log tags", ["llm_messages"], ["llm_messages"], key="excluded_tags")
-        st.multiselect("excluded log types", ["str", "dict", "list"], ["str"], key="excluded_types")
+        st.multiselect("excluded log types", ["str", "dict", "list"], ["str", "dict", "list"], key="excluded_types")
 
     if args.debug:
         debug = st.toggle("debug", value=False)
@@ -741,7 +762,7 @@ with st.sidebar:
 # Debug Info Window
 if debug:
     with st.expander(":red[**Debug Info**]", expanded=True):
-        dcol1, dcol2 = st.columns([1, 3])
+        dcol1, dcol2,  dcol3 = st.columns([1, 2, 1])
         with dcol1:
             st.markdown(
                 f"**log path**: {state.log_path}\n\n"
@@ -756,8 +777,18 @@ if debug:
                 st.write(state.last_msg)
                 if isinstance(state.last_msg.content, list):
                     st.write(state.last_msg.content[0])
-                elif not isinstance(state.last_msg.content, str):
-                    st.write(state.last_msg.content.__dict__)
+                elif isinstance(state.last_msg.content, str):
+                    st.write(state.last_msg.content)
+                elif isinstance(state.last_msg.content, dict):
+                    st.write(state.last_msg.content)
+                else:
+                    st.write(vars(state.last_msg.content))  # 如果是对象才尝试获取属性字典
+        with dcol3:
+            if state:
+                #print("state:", state)
+                print("state scenario:", state.scenario)
+                #print("state hypotheses:", state.hypotheses)
+                st.write(state)
 
 
 if state.log_path and state.fs is None:
@@ -811,7 +842,8 @@ def show_times(round: int):
         minutes = total_seconds // 60
         st.markdown(f"**:blue[{k}]**: :red[**{minutes}**] minutes :orange[**{seconds}**] seconds")
 
-
+# print("app state:", state)
+print("app state.scenario:", state.scenario)
 if state.scenario is not None:
     summary_window()
 
