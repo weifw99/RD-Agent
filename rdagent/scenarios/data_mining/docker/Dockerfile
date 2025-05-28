@@ -14,7 +14,7 @@ RUN ln -s /usr/bin/python3 /usr/bin/python
 
 # 安装 PyTorch 2.2.1（CPU）及相关依赖
 RUN python -m pip install --upgrade pip && \
-    pip install torch==2.2.1 torchvision==0.17.1 torchaudio==2.2.1 --index-url https://download.pytorch.org/whl/cpu && \
+    pip install torch==2.2.1 torchvision==0.17.1 torchaudio==2.2.1  && \
     pip install numpy && \
     pip install --upgrade cython && \
     pip install pandas && \

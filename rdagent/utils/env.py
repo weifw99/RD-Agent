@@ -432,7 +432,7 @@ class DockerConf(EnvConf):
     mem_limit: str | None = "48g"  # Add memory limit attribute
     cpu_count: int | None = None  # Add CPU limit attribute
 
-    running_timeout_period: int = 36000  # 10 hour
+    running_timeout_period: int = 360000  # 100 hour
 
     enable_cache: bool = True  # enable the cache mechanism
 

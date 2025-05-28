@@ -16,16 +16,20 @@ RUN ln -s /usr/bin/python3 /usr/bin/python && \
 # 添加 libomp
 
 # 安装 PyTorch 2.2.1（CPU 版）
+#RUN pip install --upgrade pip && \
+#    pip install torch==2.2.1 torchvision==0.17.1 torchaudio==2.2.1 --index-url https://download.pytorch.org/whl/cpu
+
 RUN pip install --upgrade pip && \
-    pip install torch==2.2.1 torchvision==0.17.1 torchaudio==2.2.1 --index-url https://download.pytorch.org/whl/cpu
+    pip install torch==2.2.1 torchvision==0.17.1 torchaudio==2.2.1
 
 # 克隆 Qlib 并固定提交版本
-RUN git clone https://github.com/microsoft/qlib.git /workspace/qlib
+# RUN git clone https://github.com/microsoft/qlib.git /workspace/qlib
+RUN git clone https://github.com/weifw99/qlib.git /workspace/qlib
 
 WORKDIR /workspace/qlib
 
 # RUN git fetch && git reset v0.9.6 --hard
-RUN git fetch && git reset df557d29d516f6741fd8b3b26cea05f8516c8435 --hard
+# RUN git fetch && git reset df557d29d516f6741fd8b3b26cea05f8516c8435 --hard
 
 
 # 安装 Python 依赖（保留版本）

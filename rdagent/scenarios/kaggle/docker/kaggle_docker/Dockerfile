@@ -15,7 +15,7 @@ RUN ln -s /usr/bin/python3 /usr/bin/python && ln -s /usr/bin/pip3 /usr/bin/pip
 
 # 安装 PyTorch 2.2.1 CPU 版本
 RUN pip install --upgrade pip && \
-    pip install torch==2.2.1 torchvision==0.17.1 torchaudio==2.2.1 --index-url https://download.pytorch.org/whl/cpu
+    pip install torch==2.2.1 torchvision==0.17.1 torchaudio==2.2.1
 
 # 设置工作目录
 WORKDIR /workspace
