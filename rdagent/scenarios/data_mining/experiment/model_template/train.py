@@ -14,7 +14,7 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import datasets, transforms
 
 # Set device for training
-device = torch.device("cuda:0" if torch.cuda.is_available() else "mps" if torch.mps.is_available() else "cpu")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 # device = torch.device("cpu")
 
 

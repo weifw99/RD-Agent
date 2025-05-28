@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
 # Check if a GPU is available
-device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.mps.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 
 
 # Restored three-layer model structure
