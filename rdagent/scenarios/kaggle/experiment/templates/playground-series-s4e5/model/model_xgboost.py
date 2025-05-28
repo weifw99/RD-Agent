@@ -13,7 +13,7 @@ def fit(X_train: pd.DataFrame, y_train: pd.DataFrame, X_valid: pd.DataFrame, y_v
         "nthread": -1,
         "n_estimators": 8000,
         "tree_method": "gpu_hist",
-        "device": "cuda",
+        "device": "mps",
         "max_depth": 10,
         "learning_rate": 0.01,
     }

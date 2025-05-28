@@ -19,7 +19,7 @@ def fit(X_train: pd.DataFrame, y_train: pd.DataFrame, X_valid: pd.DataFrame, y_v
         "num_class": num_classes,
         "nthread": -1,
         "tree_method": "hist",
-        "device": "cuda",
+        "device": "mps",
     }
     num_round = 100
 

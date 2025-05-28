@@ -16,7 +16,7 @@ def fit(X_train: pd.DataFrame, y_train: pd.DataFrame, X_valid: pd.DataFrame, y_v
         "num_class": len(set(y_train)),  # Number of classes
         "nthread": -1,
         "tree_method": "hist",
-        "device": "cuda",
+        "device": "mps",
         "eval_metric": "merror",
     }
     num_round = 100

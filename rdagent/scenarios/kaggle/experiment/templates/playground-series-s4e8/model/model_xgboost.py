@@ -14,7 +14,7 @@ def fit(X_train: pd.DataFrame, y_train: pd.DataFrame, X_valid: pd.DataFrame, y_v
     params = {
         "nthread": -1,
         "tree_method": "gpu_hist",
-        "device": "cuda",
+        "device": "mps",
     }
     num_round = 200
 

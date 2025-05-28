@@ -15,7 +15,7 @@ def fit(X_train: pd.DataFrame, y_train: pd.DataFrame, X_valid: pd.DataFrame, y_v
     params = {
         "learning_rate": 0.5,
         "max_depth": 10,
-        "device": "cuda",
+        "device": "mps",
         "tree_method": "hist",
         "objective": "binary:logistic",
         "eval_metric": "auc",

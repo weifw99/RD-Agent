@@ -17,7 +17,7 @@ def fit(X_train, y_train, X_valid, y_valid):
         "num_class": 10,
         "nthread": -1,
         "tree_method": "gpu_hist",
-        "device": "cuda",
+        "device": "mps",
     }
     num_round = 100
 

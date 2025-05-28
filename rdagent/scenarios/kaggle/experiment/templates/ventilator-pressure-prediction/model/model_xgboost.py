@@ -22,7 +22,7 @@ def fit(X_train: pd.DataFrame, y_train: pd.DataFrame, X_valid: pd.DataFrame, y_v
         "reg_alpha": 15.9,
         "random_state": 42,
         "tree_method": "hist",
-        "device": "cuda",
+        "device": "mps",
         "eval_metric": "mae",
     }
     num_boost_round = 1000
