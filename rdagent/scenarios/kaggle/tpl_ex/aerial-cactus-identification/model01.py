@@ -121,7 +121,7 @@ def model_workflow(
     ]
 
     # Training
-    epochs = hyper_params.get("epochs", 100)
+    epochs = hyper_params.get("epochs", 6)
     if val_X is not None and val_y is not None:
         validation_datagen = ImageDataGenerator(rescale=1.0 / 255)
         validation_generator = validation_datagen.flow(validation_images, validation_labels, batch_size=batch_size)

@@ -51,7 +51,7 @@ def fit(X_train: pd.DataFrame, y_train: pd.DataFrame, X_valid: pd.DataFrame, y_v
     optimizer = optim.Adam(model.parameters(), lr=0.0005)
 
     # Train the model
-    num_epochs = 400
+    num_epochs = 10
     for epoch in range(num_epochs):
         model.train()
         for X_batch, y_batch in train_loader:
