@@ -143,11 +143,16 @@ class LiteLLMAPIBackend(APIBackend):
         global ACC_COST
         # logger.warning(f"LiteLLMAPIBackend._create_chat_completion_inner_function {LogColors.GREEN}Using model{LogColors.END} {model}", tag="llm_messages")
         '''
-        cost = completion_cost(model=model, messages=messages, completion=content)
-        ACC_COST += cost
-        logger.info(
-            f"Current Cost: ${float(cost):.10f}; Accumulated Cost: ${float(ACC_COST):.10f}; {finish_reason=}",
-        )
+        try:
+            cost = completion_cost(model=model, messages=messages, completion=content)
+        except Exception as e:
+            logger.warning(f"Cost calculation failed for model {model}: {e}. Skip cost statistics.")
+        else:
+            ACC_COST += cost
+            logger.info(
+                f"Current Cost: ${float(cost):.10f}; Accumulated Cost: ${float(ACC_COST):.10f}; {finish_reason=}",
+            )
+
         prompt_tokens = token_counter(model=model, messages=messages)
         completion_tokens = token_counter(model=model, text=content)
         logger.log_object(

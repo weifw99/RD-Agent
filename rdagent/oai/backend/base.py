@@ -14,6 +14,7 @@ from typing import Any, Optional, cast, Dict
 import pytz
 from pydantic import TypeAdapter
 
+from rdagent.core.exception import PolicyError
 from rdagent.core.utils import LLM_CACHE_SEED_GEN, SingletonBaseClass
 from rdagent.log import LogColors
 from rdagent.log import rdagent_logger as logger
@@ -283,7 +284,6 @@ class APIBackend(ABC):
             shrink_multiple_break=shrink_multiple_break,
         )
 
-        logger.warning(f'build_messages_and_create_chat_completion, messages: {messages}')
         resp = self._try_create_chat_completion_or_embedding(  # type: ignore[misc]
             *args,
             messages=messages,
@@ -331,6 +331,7 @@ class APIBackend(ABC):
         *args,
         **kwargs,
     ) -> str | list[list[float]]:
+        """This function to share operation between embedding and chat completion"""
         assert not (chat_completion and embedding), "chat_completion and embedding cannot be True at the same time"
         max_retry = LLM_SETTINGS.max_retry if LLM_SETTINGS.max_retry is not None else max_retry
         timeout_count = 0
@@ -370,7 +371,7 @@ class APIBackend(ABC):
                         violation_count += 1
                         if violation_count >= LLM_SETTINGS.violation_fail_limit:
                             logger.warning("Content policy violation detected.")
-                            raise e
+                            raise PolicyError(e)
 
                     if (
                         openai_imported
@@ -400,39 +401,33 @@ class APIBackend(ABC):
         error_message = f"Failed to create chat completion after {max_retry} retries."
         raise RuntimeError(error_message)
 
-    def _create_chat_completion_add_json_in_prompt(
-        self,
-        messages: list[dict[str, Any]],
-        add_json_in_prompt: bool = False,
-        json_mode: bool = False,
-        *args: Any,
-        **kwargs: Any,
-    ) -> tuple[str, str | None]:
+    def _add_json_in_prompt(self, messages: list[dict[str, Any]]) -> None:
         """
         add json related content in the prompt if add_json_in_prompt is True
         """
-        if json_mode and add_json_in_prompt:
-            for message in messages[::-1]:
-                message["content"] = message["content"] + "\nPlease respond in json format."
-                if message["role"] == LLM_SETTINGS.system_prompt_role:
-                    # NOTE: assumption: systemprompt is always the first message
-                    break
-        logger.warning(f"_create_chat_completion_add_json_in_prompt, add_json_in_prompt: {add_json_in_prompt}, json_mode: {json_mode}, messages: {messages}")
-        return self._create_chat_completion_inner_function(messages=messages, json_mode=json_mode, *args, **kwargs)  # type: ignore[misc]
+        for message in messages[::-1]:
+            message["content"] = message["content"] + "\nPlease respond in json format."
+            if message["role"] == LLM_SETTINGS.system_prompt_role:
+                # NOTE: assumption: systemprompt is always the first message
+                break
+        logger.warning(f"_add_json_in_prompt, messages: {messages}")
+
 
     def _create_chat_completion_auto_continue(
         self,
         messages: list[dict[str, Any]],
-        *args: Any,
         json_mode: bool = False,
         chat_cache_prefix: str = "",
         seed: Optional[int] = None,
         json_target_type: Optional[str] = None,
+        add_json_in_prompt: bool = False,
         **kwargs: Any,
     ) -> str:
         """
         Call the chat completion function and automatically continue the conversation if the finish_reason is length.
         """
+
+        # 0) return directly if cache is hit
         if seed is None and LLM_SETTINGS.use_auto_chat_cache_seed_gen:
             seed = LLM_CACHE_SEED_GEN.get_next_seed()
         # logger.warning(f"_create_chat_completion_auto_continue, seed: {seed}, messages: {messages}")
@@ -448,71 +443,81 @@ class APIBackend(ABC):
                     logger.info(f"{LogColors.CYAN}Response:{cache_result}{LogColors.END}", tag="llm_messages")
                 return cache_result
 
+        # 1) get a full response
         all_response = ""
         new_messages = deepcopy(messages)
+        # Loop to get a full response
         try_n = 10
         for i_ in range(try_n):  # for some long code, 3 times may not enough for reasoning models
-            if "json_mode" in kwargs:
-                del kwargs["json_mode"]
             logger.warning(f"_create_chat_completion_auto_continue, _create_chat_completion_add_json_in_prompt try_n: {try_n}_{i_}, new_messages: {new_messages}, json_mode: {json_mode}, json_target_type: {json_target_type}")
-
-            response, finish_reason = self._create_chat_completion_add_json_in_prompt(
-                new_messages, json_mode=json_mode, *args, **kwargs
-            )  # type: ignore[misc]
+            if json_mode and add_json_in_prompt:
+                self._add_json_in_prompt(new_messages)
+            response, finish_reason = self._create_chat_completion_inner_function(
+                messages=new_messages,
+                json_mode=json_mode,
+                **kwargs,
+            )
             logger.warning(f"_create_chat_completion_auto_continue, _create_chat_completion_add_json_in_prompt try_n: {try_n}_{i_}, response length: {len(response)},response: {response}, finish_reason: {finish_reason}, json_mode: {json_mode}, json_target_type: {json_target_type}" )
 
-            # response 移除 think
             all_response += response
             if finish_reason is None or finish_reason != "length":
-                if json_mode:
-                    try:
-                        json.loads(all_response)
-                    except json.decoder.JSONDecodeError as e:
-                        logger.warning(f"_create_chat_completion_auto_continue json loads Failed to parse json: {e}, try to parse json in code block")
-                        # 移除<think></think>标签内的数据
-                        from rdagent.oai.llm_utils import remove_tag_with_content
-                        all_response = remove_tag_with_content(all_response, 'think')
-
-                        from rdagent.oai.llm_utils import extract_json_objects, parse_json_result
-                        json_result = extract_json_objects(all_response)
-                        json_str = parse_json_result(all_response)
-                        # match_json = re.search(r"```json(.*)```", all_response, re.DOTALL)
-                        # logger.warning(f"_create_chat_completion_auto_continue json search, match_json: {match_json}, match: {match}")
-                        # if match_json:
-                        #     all_response = match_json.group(0)
-                        #     all_response = all_response.replace('```json', '').replace('```', '').strip()
-                        #     print(f"match_json all_response: {all_response}")
-                        #     if not all_response.endswith('}'):
-                        #         all_response = parse_json_result(all_response)
-                        if len(json_str) > 0:
-                            all_response = json_str
-                            print(f"match_parse_json all_response: {all_response}")
-                        elif len(json_result) > 0:
-                            all_response = str(json_result[len(json_result)-1])
-                            print(f"json_result all_response: {all_response}")
-                        else:
-                            all_response = all_response
-
-                        # 移除尾随逗号（包括对象和数组中的）
-                        from rdagent.oai.llm_utils import clean_json_str
-                        all_response = clean_json_str(all_response)
-
-                        logger.warning(f"_create_chat_completion_auto_continue json loads all response: {all_response}")
-                        # json.loads(all_response)
-                if json_target_type is not None:
-                    logger.warning(f"validate_json start _create_chat_completion_auto_continue , json_target_type: {json_target_type}, all_response: {all_response}")
-                    match = re.search(r'"code": "(.*)"\s*}', all_response, re.DOTALL)
-                    if json_target_type == Dict[str, str] and match:
-                        logger.warning(f"validate_json : not execute TypeAdapter json_target_type:{json_target_type}, match:{match}")
-                    else:
-                        logger.warning(f"validate_json : execute TypeAdapter json_target_type:{json_target_type}, match:{match}")
-                        TypeAdapter(json_target_type).validate_json(all_response)
-                    logger.warning(f"validate_json end _create_chat_completion_auto_continue , json_target_type: {json_target_type}, all_response: {all_response}")
-                if self.dump_chat_cache:
-                    self.cache.chat_set(input_content_json, all_response)
-                return all_response
+                break  # we get a full response now.
             new_messages.append({"role": "assistant", "content": response})
-        raise RuntimeError(f"Failed to continue the conversation after {try_n} retries.")
+        else:
+            raise RuntimeError(f"Failed to continue the conversation after {try_n} retries.")
+
+        # 2) refine the response and return
+        if LLM_SETTINGS.reasoning_think_rm:
+            match = re.search(r"<think>(.*?)</think>(.*)", all_response, re.DOTALL)
+            _, all_response = match.groups() if match else ("", all_response)
+
+        if json_mode:
+            try:
+                json.loads(all_response)
+            except json.decoder.JSONDecodeError as e:
+                logger.warning(f"_create_chat_completion_auto_continue json loads Failed to parse json: {e}, try to parse json in code block")
+                # 移除<think></think>标签内的数据
+                from rdagent.oai.llm_utils import remove_tag_with_content
+                all_response = remove_tag_with_content(all_response, 'think')
+
+                from rdagent.oai.llm_utils import extract_json_objects, parse_json_result
+                json_result = extract_json_objects(all_response)
+                json_str = parse_json_result(all_response)
+                # match_json = re.search(r"```json(.*)```", all_response, re.DOTALL)
+                # logger.warning(f"_create_chat_completion_auto_continue json search, match_json: {match_json}, match: {match}")
+                # if match_json:
+                #     all_response = match_json.group(0)
+                #     all_response = all_response.replace('```json', '').replace('```', '').strip()
+                #     print(f"match_json all_response: {all_response}")
+                #     if not all_response.endswith('}'):
+                #         all_response = parse_json_result(all_response)
+                if len(json_str) > 0:
+                    all_response = json_str
+                    print(f"match_parse_json all_response: {all_response}")
+                elif len(json_result) > 0:
+                    all_response = str(json_result[len(json_result) - 1])
+                    print(f"json_result all_response: {all_response}")
+                else:
+                    all_response = all_response
+
+                # 移除尾随逗号（包括对象和数组中的）
+                from rdagent.oai.llm_utils import clean_json_str
+                all_response = clean_json_str(all_response)
+
+                logger.warning(f"_create_chat_completion_auto_continue json loads all response: {all_response}")
+                # json.loads(all_response)
+        if json_target_type is not None:
+            logger.warning(f"validate_json start _create_chat_completion_auto_continue , json_target_type: {json_target_type}, all_response: {all_response}")
+            match = re.search(r'"code": "(.*)"\s*}', all_response, re.DOTALL)
+            if json_target_type == Dict[str, str] and match:
+                logger.warning(f"validate_json : not execute TypeAdapter json_target_type:{json_target_type}, match:{match}")
+            else:
+                logger.warning(f"validate_json : execute TypeAdapter json_target_type:{json_target_type}, match:{match}")
+                TypeAdapter(json_target_type).validate_json(all_response)
+            logger.warning(f"validate_json end _create_chat_completion_auto_continue , json_target_type: {json_target_type}, all_response: {all_response}")
+        if self.dump_chat_cache:
+            self.cache.chat_set(input_content_json, all_response)
+        return all_response
 
     def _create_embedding_with_cache(
         self, input_content_list: list[str], *args: Any, **kwargs: Any
