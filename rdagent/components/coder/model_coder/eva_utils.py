@@ -146,6 +146,9 @@ class ModelFinalEvaluator(CoSTEEREvaluator):
         )
 
         execution_feedback_to_render = model_execution_feedback
+        # 移除<think></think>标签内的数据
+        from rdagent.oai.llm_utils import remove_tag_with_content
+        model_code_feedback = remove_tag_with_content(model_code_feedback, 'think')
 
         for _ in range(10):  # 10 times to split the content is enough
             user_prompt = (

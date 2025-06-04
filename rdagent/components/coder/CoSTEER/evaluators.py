@@ -101,11 +101,12 @@ class CoSTEERSingleFeedbackDeprecated(CoSTEERSingleFeedback):
         value_generated_flag: bool = None,
         final_decision_based_on_gt: bool = None,
     ) -> None:
-        self.execution_feedback = execution_feedback
-        self.code_feedback = code_feedback
-        self.value_feedback = value_feedback
+        from rdagent.oai.llm_utils import remove_tag_with_content
+        self.execution_feedback = remove_tag_with_content(execution_feedback, 'think')
+        self.code_feedback = remove_tag_with_content(code_feedback, 'think')
+        self.value_feedback = remove_tag_with_content(value_feedback, 'think')
         self.final_decision = final_decision
-        self.final_feedback = final_feedback
+        self.final_feedback = remove_tag_with_content(final_feedback, 'think')
         self.value_generated_flag = value_generated_flag
         self.final_decision_based_on_gt = final_decision_based_on_gt
 
