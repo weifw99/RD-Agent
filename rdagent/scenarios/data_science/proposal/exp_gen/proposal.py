@@ -1,7 +1,11 @@
 import json
 import pprint
 from enum import Enum
-from typing import Dict, List, Optional, Tuple, Union
+<<<<<<< HEAD
+from typing import Dict, List, Tuple, Union
+=======
+from typing import Dict, List, Optional, Tuple
+>>>>>>> pullrequests/microsoft/main
 
 import pandas as pd
 from pydantic import BaseModel, Field
@@ -394,7 +398,7 @@ class DSProposalV1ExpGen(ExpGen):
                         # NOTE: corner cases.
                         # workflow_update may be a string
                         # model could have 2 level nested dict.
-                        json_target_type=dict[str, dict[str, str | dict] | str],
+                        json_target_type=dict[str, Union[dict[str, Union[str , dict]] , str]],
                     )
                 )
                 assert "hypothesis_proposal" in resp_dict, "Hypothesis proposal not provided."
