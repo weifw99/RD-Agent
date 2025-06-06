@@ -191,9 +191,9 @@ def get_msgs_until(end_func: Callable[[Message], bool] = lambda _: True):
                             state.alpha158_metrics = sms
 
                         if (
-                                state.lround == 1
-                                and len(msg.content.based_experiments) > 0
-                                and msg.content.based_experiments[-1].result is not None
+                            state.lround == 1
+                            and len(msg.content.based_experiments) > 0
+                            and msg.content.based_experiments[-1].result is not None
                         ):
                             sms = msg.content.based_experiments[-1].result
                             if isinstance(state.scenario, DMModelScenario):
@@ -302,7 +302,8 @@ def refresh(same_trace: bool = False):
     # detect scenario
     if not same_trace:
         print("refresh same_trace: ", same_trace, )
-        get_msgs_until(lambda m: "debug_" not in m.tag and not isinstance(m.content, str | list | dict))
+        get_msgs_until(lambda m: isinstance(m.content, Scenario))
+        # get_msgs_until(lambda m: "debug_" not in m.tag and not isinstance(m.content, str | list | dict))
         if state.last_msg is not None:
             print("### scenario state.last_msg: ", type(state.last_msg.content), type(state.last_msg) )
         else:
@@ -864,19 +865,21 @@ if debug:
                 st.write(state.last_msg)
                 if isinstance(state.last_msg.content, list):
                     st.write(state.last_msg.content[0])
-                elif isinstance(state.last_msg.content, str):
-                    st.write(state.last_msg.content)
                 elif isinstance(state.last_msg.content, dict):
                     st.write(state.last_msg.content)
+                elif isinstance(state.last_msg.content, str):
+                    st.write(state.last_msg.content)
                 else:
-                    st.write(vars(state.last_msg.content))  # 如果是对象才尝试获取属性字典
+                    try:
+                        st.write(vars(state.last_msg.content))  # 如果是对象才尝试获取属性字典
+                    except:
+                        st.write(type(state.last_msg.content))
         with dcol3:
             if state:
                 #print("state:", state)
                 print("state scenario:", state.scenario)
                 #print("state hypotheses:", state.hypotheses)
                 st.write(state)
-
 
 if state.log_path and state.fs is None:
     refresh()
@@ -1158,8 +1161,6 @@ def analyze_task_completion():
         st.info("No task completion data available.")
 
 
-# print("app state:", state)
-print("app state.scenario:", state.scenario)
 if state.scenario is not None:
     summary_window()
     if st.toggle("show analyse_task_competition"):
