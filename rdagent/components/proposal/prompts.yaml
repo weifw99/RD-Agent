@@ -27,7 +27,7 @@ hypothesis_gen:
     {% endif %}
     Also generate the relevant keys for the reasoning and the distilled knowledge that follows. For those keys, in particular for knowledge, explain in the context of the specific scenario to build up domain knowledge in the specific field rather than general knowledge.
     
-    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+    ⚠️ 最终输出内容请使用**中文进行推理和说明**，但结构化内容如 `代码`、`JSON` 保持英文原样输出，不要进行翻译或格式更改。
 
 hypothesis2experiment:
   system_prompt: |-
@@ -51,4 +51,4 @@ hypothesis2experiment:
     {{ hypothesis_and_feedback }}
     Please generate the new {{targets}} based on the information above.
     
-    输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+    ⚠️ 最终输出内容请使用**中文进行推理和说明**，但结构化内容如 `代码`、`JSON` 保持英文原样输出，不要进行翻译或格式更改。

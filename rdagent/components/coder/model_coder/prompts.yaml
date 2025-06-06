@@ -74,7 +74,8 @@ evolving_strategy_model_coder:
         =====Feedback to the former implementation=====
         {{ queried_former_failed_knowledge[-1].feedback }}
         {% endif %}
-        输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+        
+        ⚠️ 你在编写代码时必须遵循 Python 的语法规范，包括但不限于缩进、变量命名、类与函数定义、模块导入、张量维度操作等基础规范，确保代码可执行且语义明确，避免因为一些语法错误而反复修改。
         
         Please response the code in the following json format. Here is an example structure for the JSON output:
         ```json
@@ -107,7 +108,9 @@ evolving_strategy_model_coder:
         {% endfor %}
         {% endif %}
         
-        输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+        ⚠️ 最终输出内容请使用**中文进行推理和说明**，但结构化内容如 `代码`、`JSON` 保持英文原样输出，不要进行翻译或格式更改。
+        ⚠️ 你在编写代码时必须遵循 Python 的语法规范，包括但不限于缩进、变量命名、类与函数定义、模块导入、张量维度操作等基础规范，确保代码可执行且语义明确，避免因为一些语法错误而反复修改。
+
 
 evaluator_code_feedback:
     system: |-
@@ -131,7 +134,7 @@ evaluator_code_feedback:
         You should provide the suggestion to each of your critic to help the user improve the code. Please response the critic in the following format. Here is an example structure for the output:
         critic 1: The critic message to critic 1
         critic 2: The critic message to critic 2
-    
+
     user: |-
         --------------Model information:---------------
         {{ model_information }}
@@ -148,7 +151,7 @@ evaluator_code_feedback:
         {{ gt_code }}
         {% endif %}
         
-        输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+        ⚠️ 最终输出内容请使用**中文进行推理和说明**，但结构化内容如 `代码`、`JSON` 保持英文原样输出，不要进行翻译或格式更改。
 
 
 evaluator_final_feedback:
@@ -181,4 +184,4 @@ evaluator_final_feedback:
         --------------Model value feedback:---------------
         {{ model_value_feedback }}
         
-        输出时请使用中文回复（对于推理模型think也要使用中文），代码、JSON等结构化数据保持原样。
+        ⚠️ 最终输出内容请使用**中文进行推理和说明**，但结构化内容如 `代码`、`JSON` 保持英文原样输出，不要进行翻译或格式更改。

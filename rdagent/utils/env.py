@@ -202,6 +202,12 @@ class Env(Generic[ASpecificEnvConf]):
             A tuple containing the stdout and the exit code
         """
         running_extra_volume = kwargs.get("running_extra_volume", {})
+        # ✅ 增加宿主机时间挂载
+        if os.path.exists("/etc/localtime"):
+            running_extra_volume.setdefault("/etc/localtime", "/etc/localtime:ro")
+        if os.path.exists("/etc/timezone"):
+            running_extra_volume.setdefault("/etc/timezone", "/etc/timezone:ro")
+
         if entry is None:
             entry = self.conf.default_entry
 
