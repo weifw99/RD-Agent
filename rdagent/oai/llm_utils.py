@@ -99,9 +99,9 @@ def clean_json_str(json_str: str) -> str:
     cleaned = json_str.strip()
 
     # 修复非标准布尔值
-    cleaned = re.sub(r'\bTrue\b', 'true', cleaned)
-    cleaned = re.sub(r'\bFalse\b', 'false', cleaned)
-    cleaned = re.sub(r'\bNone\b', 'null', cleaned)
+    # cleaned = re.sub(r'\bTrue\b', 'true', cleaned)
+    # cleaned = re.sub(r'\bFalse\b', 'false', cleaned)
+    # cleaned = re.sub(r'\bNone\b', 'null', cleaned)
 
     # 删除 key-value 后多余逗号（在 } 或 ] 之前）
     cleaned = re.sub(r',\s*([\]}])', r'\1', cleaned)
