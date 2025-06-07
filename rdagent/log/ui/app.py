@@ -675,7 +675,9 @@ def feedback_window():
                     try:
                         st.write("workspace")
                         st.write(fbr[0].content.experiment_workspace.workspace_path)
-                        st.write(fbr[0].content.stdout)
+                        # 检查是否存在 stdout 属性
+                        if hasattr(fbr[0].content, 'stdout'):
+                            st.write(fbr[0].content.stdout)
                     except Exception as e:
                         st.error(f"Error displaying workspace path: {str(e)}")
                 with st.expander("**Config⚙️**", expanded=True):
