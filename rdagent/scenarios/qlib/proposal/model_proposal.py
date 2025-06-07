@@ -38,7 +38,8 @@ class QlibModelHypothesisGen(ModelHypothesisGen):
         return context_dict, True
 
     def convert_response(self, response: str) -> Hypothesis:
-        response_dict = json.loads(response)
+        response_dict = self.hypothesis_response_parse(response)
+        print(f"{'##' * 10} QlibModelHypothesisGen.convert_response：response_dict: {response_dict}")
         hypothesis = QlibModelHypothesis(
             hypothesis=response_dict["hypothesis"],
             reason=response_dict["reason"],
@@ -48,6 +49,37 @@ class QlibModelHypothesisGen(ModelHypothesisGen):
             concise_knowledge=response_dict["concise_knowledge"],
         )
         return hypothesis
+
+    def hypothesis_response_parse(self, response):
+        try:
+            response_dict = json.loads(response)
+        except json.JSONDecodeError:
+            print(
+                f"{'##' * 10} QlibModelHypothesisGen.convert_response：JSON 解析错误，将反斜杠替换为四个反斜杠(LaTeX 公式处理), json response: {response}")
+
+            # 处理 JSON 解析错误，将反斜杠替换为四个反斜杠(LaTeX 公式处理)
+            def escape_latex_for_json(s):
+                import re
+                # 将单个反斜杠替换为四个反斜杠（适用于 LaTeX 公式在 JSON 中的表示）
+                return re.sub(r'\\', r'\\\\', s)
+
+            response = escape_latex_for_json(response)
+            import re
+
+            def safe_json_loads(response: str):
+                # 仅替换 JSON 值中的 LaTeX 字符串中的反斜杠（不会影响 JSON key）
+                def escape_latex(match):
+                    return match.group(0).replace("\\", "\\\\")
+
+                # 替换所有 value 中包含 \ 的字段，避免误伤 key
+                response = re.sub(r'(?<="formulation":\s?")[^"]+', escape_latex, response)
+                response = re.sub(r'(?<="description":\s?")[^"]+', escape_latex, response)
+                response = re.sub(r'(?<=".*?":\s?")[^"]+(?=")', escape_latex, response)
+
+                return json.loads(response)
+
+            response_dict = safe_json_loads(response)
+        return response_dict
 
 
 class QlibModelHypothesis2Experiment(ModelHypothesis2Experiment):

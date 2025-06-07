@@ -158,7 +158,7 @@ class Env(Generic[ASpecificEnvConf]):
                     entry, local_path, env, running_extra_volume=running_extra_volume, remove_timestamp=remove_timestamp
                 )
                 end = time.time()
-                logger.info(f"Running time: {end - start} seconds")
+                logger.info(f"Running time: {end - start} seconds,  , return_code:{return_code}, log_output:{log_output}")
                 if end - start + 1 >= self.conf.running_timeout_period:
                     logger.warning(
                         f"The running time exceeds {self.conf.running_timeout_period} seconds, so the process is killed."
@@ -695,14 +695,16 @@ class DockerEnv(Env[DockerConf]):
             table.add_row("Env", "\n".join(f"{k}:{v}" for k, v in env.items()))
             table.add_row("Volumes", "\n".join(f"{k}:{v}" for k, v in volumes.items()))
             print(table)
+            from rich.markup import escape
             for log in logs:
                 decoded_log = log.strip().decode()
                 decoded_log = self.replace_time_info(decoded_log) if remove_timestamp else decoded_log
                 Console().print(decoded_log, markup=False)
                 log_output += decoded_log + "\n"
             exit_status = container.wait()["StatusCode"]
-            # container.stop()
+            container.stop()
             # container.remove()
+            print(f'_run_ret_code exit_status:{exit_status}, log_output:{escape(log_output)}')
             print(Rule("[bold green]Docker Logs End[/bold green]", style="dark_orange"))
             return log_output, exit_status
         except docker.errors.ContainerError as e:
