@@ -1,10 +1,6 @@
 import json
 from enum import Enum
-<<<<<<< HEAD
-from typing import Dict, List, Tuple, Union
-=======
-from typing import Dict, List, Optional, Tuple
->>>>>>> pullrequests/microsoft/main
+from typing import Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 from pydantic import BaseModel, Field

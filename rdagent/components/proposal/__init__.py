@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Tuple
+from typing import Tuple, Dict, Union, List
 
 from rdagent.core.experiment import Experiment
 from rdagent.core.proposal import (
@@ -107,7 +107,9 @@ class LLMHypothesis2Experiment(Hypothesis2Experiment[Experiment]):
         )
 
         resp = APIBackend().build_messages_and_create_chat_completion(
-            user_prompt, system_prompt, json_mode=json_flag, json_target_type=dict[str, dict[str, str | dict]]
+            user_prompt, system_prompt, json_mode=json_flag, json_target_type=Dict[str, Union[
+                str, bool, int, Dict[str, Union[str, int, float, bool, List[Union[str, int, float, bool]]]], List[
+                    Union[str, int, float, bool, Dict[str, Union[str, int, float, bool]]]]]]
         )
 
         return self.convert_response(resp, hypothesis, trace)

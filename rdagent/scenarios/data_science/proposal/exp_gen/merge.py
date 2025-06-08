@@ -2,7 +2,7 @@
 
 import json
 from datetime import timedelta
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Union, List
 
 from rdagent.app.data_science.conf import DS_RD_SETTING
 from rdagent.components.coder.data_science.pipeline.exp import PipelineTask
@@ -114,7 +114,9 @@ class ExpGen2Hypothesis(DSProposalV2ExpGen):
             user_prompt=user_prompt,
             system_prompt=sys_prompt,
             json_mode=True,
-            json_target_type=Dict[str, Dict[str, str | Dict[str, str | int]]],
+            json_target_type=Dict[str, Union[
+                str, bool, int, Dict[str, Union[str, int, float, bool, List[Union[str, int, float, bool]]]], List[
+                    Union[str, int, float, bool, Dict[str, Union[str, int, float, bool]]]]]],
         )
         resp_dict = json.loads(response)
         return resp_dict

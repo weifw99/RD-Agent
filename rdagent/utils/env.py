@@ -70,7 +70,7 @@ def pull_image_with_progress(image: str) -> None:
 class EnvConf(ExtendedBaseSettings):
     default_entry: str
     extra_volumes: dict = {}
-    running_timeout_period: int = 3600  # 10 minutes
+    running_timeout_period: int = 360000  # 100 hour
     # helper settings to support transparent;
     enable_cache: bool = True
     retry_count: int = 5  # retry count for the docker run
@@ -224,7 +224,11 @@ class Env(Generic[ASpecificEnvConf]):
             + (f"chmod -R 777 {self.conf.mount_path}; " if hasattr(self.conf, "mount_path") else "")
             + "exit $entry_exit_code'"
         )
-
+        # macos不支持 timeout, 需要修改为 gtimeout
+        import platform
+        if isinstance(self, LocalEnv) and platform.system() in ["MacOS", "Darwin"]:
+            entry_add_timeout = entry_add_timeout.replace(f'timeout --kill-after=10 {self.conf.running_timeout_period}', f'gtimeout {self.conf.running_timeout_period}s')
+        logger.info( f"{type(self)} run command: {entry_add_timeout}, local_path:{local_path}, running_extra_volume:{running_extra_volume}")
         if self.conf.enable_cache:
             stdout, return_code = self.cached_run(entry_add_timeout, local_path, env, running_extra_volume)
         else:
@@ -547,11 +551,12 @@ class QlibCondaEnv(LocalEnv[QlibCondaConf]):
                     shell=True,
                 )
                 subprocess.check_call(
-                    f"conda run -n {self.conf.conda_env_name} pip install git+https://github.com/microsoft/qlib.git@3e72593b8c985f01979bebcf646658002ac43b00",
+                    # f"conda run -n {self.conf.conda_env_name} pip install git+https://github.com/microsoft/qlib.git@3e72593b8c985f01979bebcf646658002ac43b00",
+                    f"conda run -n {self.conf.conda_env_name} pip install git+https://github.com/weifw99/qlib.git",
                     shell=True,
                 )
                 subprocess.check_call(
-                    f"conda run -n {self.conf.conda_env_name} pip install catboost xgboost scipy==1.11.4 tables torch",
+                    f"conda run -n {self.conf.conda_env_name} pip install catboost xgboost lightgbm scipy==1.11.4 tables joblib==1.4.2 torch==2.2.1 torchvision==0.17.1 torchaudio==2.2.1",
                     shell=True,
                 )
         except Exception as e:
