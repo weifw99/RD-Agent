@@ -590,6 +590,15 @@ def feedback_window():
             if state.lround > 0 and isinstance(
                 state.scenario, (QlibModelScenario, QlibFactorScenario, QlibFactorFromReportScenario, KGScenario)
             ):
+                if fbr := state.msgs[round]["ef.runner result"]:
+                    try:
+                        st.write("workspace")
+                        st.write(fbr[0].content.experiment_workspace.workspace_path)
+                        # 检查是否存在 stdout 属性
+                        if hasattr(fbr[0].content, 'stdout'):
+                            st.write(fbr[0].content.stdout)
+                    except Exception as e:
+                        st.error(f"Error displaying workspace path: {str(e)}")
                 with st.expander("**Config⚙️**", expanded=True):
                     st.markdown(state.scenario.experiment_setting, unsafe_allow_html=True)
 
