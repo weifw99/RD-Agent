@@ -110,13 +110,36 @@ class ExpGen2Hypothesis(DSProposalV2ExpGen):
             exp_and_feedback_list_desc=exp_feedback_list_desc,
             sota_exp_desc=sota_exp_desc,
         )
+        # fix json_target_type 兼容两种 json
+        '''
+        结构一
+        {
+          "MultilayerGRU": {
+            "description": "模型描述",
+            "hyperparameters": {
+              "lr": 0.001
+            }
+          }
+        }
+        结构二
+        {
+          "model_name": "MultilayerGRU",
+          "description": "模型描述",
+          "hyperparameters": {
+            "lr": 0.001
+          }
+        }
+        '''
+        field_value = Union[
+            str,
+            Dict[str, Union[str, int, float, None]],
+            None
+        ]
         response = APIBackend().build_messages_and_create_chat_completion(
             user_prompt=user_prompt,
             system_prompt=sys_prompt,
             json_mode=True,
-            json_target_type=Dict[str, Union[
-                str, bool, int, Dict[str, Union[str, int, float, bool, List[Union[str, int, float, bool]]]], List[
-                    Union[str, int, float, bool, Dict[str, Union[str, int, float, bool]]]]]],
+            json_target_type=Dict[str, Union[str, field_value, Dict[str, field_value]]]
         )
         resp_dict = json.loads(response)
         return resp_dict

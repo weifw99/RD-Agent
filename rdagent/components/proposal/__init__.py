@@ -105,11 +105,34 @@ class LLMHypothesis2Experiment(Hypothesis2Experiment[Experiment]):
             target_list=context["target_list"],
             RAG=context["RAG"],
         )
-
+        # fix json_target_type 兼容两种 json
+        '''
+        结构一
+        {
+          "MultilayerGRU": {
+            "description": "模型描述",
+            "hyperparameters": {
+              "lr": 0.001
+            }
+          }
+        }
+        结构二
+        {
+          "model_name": "MultilayerGRU",
+          "description": "模型描述",
+          "hyperparameters": {
+            "lr": 0.001
+          }
+        }
+        '''
+        field_value = Union[
+            str,
+            Dict[str, Union[str, int, float, None]],
+            None
+        ]
         resp = APIBackend().build_messages_and_create_chat_completion(
-            user_prompt, system_prompt, json_mode=json_flag, json_target_type=Dict[str, Union[
-                str, bool, int, Dict[str, Union[str, int, float, bool, List[Union[str, int, float, bool]]]], List[
-                    Union[str, int, float, bool, Dict[str, Union[str, int, float, bool]]]]]]
+            user_prompt, system_prompt, json_mode=json_flag,
+            json_target_type = Dict[str, Union[str, field_value, Dict[str, field_value]]]
         )
 
         return self.convert_response(resp, hypothesis, trace)
