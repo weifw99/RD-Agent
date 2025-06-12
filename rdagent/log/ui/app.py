@@ -56,8 +56,14 @@ else:
 QLIB_SELECTED_METRICS = [
     "IC",
     "1day.excess_return_without_cost.annualized_return",
+    "ICIR",
+    "1day.excess_return_with_cost.annualized_return",
+
     "1day.excess_return_without_cost.information_ratio",
     "1day.excess_return_without_cost.max_drawdown",
+
+    "1day.excess_return_with_cost.information_ratio",
+    "1day.excess_return_with_cost.max_drawdown",
 ]
 
 SIMILAR_SCENARIOS = (QlibModelScenario, DMModelScenario, QlibFactorScenario, QlibFactorFromReportScenario, KGScenario)
@@ -371,7 +377,10 @@ def display_hypotheses(hypotheses: dict[int, Hypothesis], decisions: dict[int, b
     st.markdown(df.style.apply(style_rows, axis=1).apply(style_columns, axis=0).to_html(), unsafe_allow_html=True)
 
 
-def metrics_window(df: pd.DataFrame, R: int, C: int, *, height: int = 300, colors: list[str] = None):
+def metrics_window(df: pd.DataFrame, R: int, C: int, *, height: int = 350, colors: list[str] = None):
+    # 对 df.columns 的每个标题，在 '.' 后插入换行
+    # wrapped_titles = [title.replace(".", ".<br>") for title in df.columns]
+    # fig = make_subplots(rows=R, cols=C, subplot_titles=wrapped_titles)
     fig = make_subplots(rows=R, cols=C, subplot_titles=df.columns)
 
     def hypothesis_hover_text(h: Hypothesis, d: bool = False):
@@ -417,6 +426,13 @@ def metrics_window(df: pd.DataFrame, R: int, C: int, *, height: int = 300, color
                 )
     st.plotly_chart(fig)
 
+    from io import BytesIO
+
+    buffer = BytesIO()
+    df.to_csv(buffer)
+    buffer.seek(0)
+    st.download_button(label="download the metrics (csv)", data=buffer, file_name="metrics.csv", mime="text/csv")
+
 
 def summary_window():
     if isinstance(state.scenario, SIMILAR_SCENARIOS):
@@ -459,7 +475,7 @@ def summary_window():
                         fig.update_layout(xaxis_title="Loop Round", yaxis_title=None)
                         st.plotly_chart(fig)
                     else:
-                        metrics_window(df, 1, 4, height=300, colors=["red", "blue", "orange", "green"])
+                        metrics_window(df, 4, 2, height=1000, colors=["red", "red", "blue", "blue", "orange", "orange", "green", "green"])
 
     elif isinstance(state.scenario, GeneralModelScenario):
         with st.container(border=True):
