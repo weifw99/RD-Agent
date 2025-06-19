@@ -92,16 +92,28 @@ def parse_json_result(result_str) -> str:
 #     text = re.sub(r',\s*([}\]])', r'\1', text)
 #     return text
 
+
+def extract_keys_from_malformed_json(json_str):
+    # 匹配所有形式的 "key": 或 'key':
+    pattern = r'["\']([\w\-\.]+)["\']\s*:'
+    keys = set(re.findall(pattern, json_str))
+    return keys
+
 def clean_json_str(json_str: str) -> str:
     """
     尽可能清洗 JSON 字符串中的非标准格式问题，使其可被 json.loads 正确解析
     """
     cleaned = json_str.strip()
 
-    # 修复非标准布尔值
-    # cleaned = re.sub(r'\bTrue\b', 'true', cleaned)
-    # cleaned = re.sub(r'\bFalse\b', 'false', cleaned)
-    # cleaned = re.sub(r'\bNone\b', 'null', cleaned)
+    keyset = extract_keys_from_malformed_json(cleaned)
+
+    if 'code' not in keyset:
+        # 修复非标准布尔值 代码中的 bool 不需要替换，其他 json 中的 bool 需要改成小写
+        cleaned = re.sub(r'\bTrue\b', 'true', cleaned)
+        cleaned = re.sub(r'\bFalse\b', 'false', cleaned)
+        cleaned = re.sub(r'\bNone\b', 'null', cleaned)
+    else:
+        cleaned = cleaned.replace('"""', '"').replace("'''", "'")
 
     # 删除 key-value 后多余逗号（在 } 或 ] 之前）
     cleaned = re.sub(r',\s*([\]}])', r'\1', cleaned)
