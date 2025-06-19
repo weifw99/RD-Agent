@@ -408,6 +408,7 @@ class LocalConf(EnvConf):
     """path like <path1>:<path2>:<path3>, which will be prepend to bin path."""
 
     retry_count: int = 0  # retry count for; run `retry_count + 1` times
+    live_output: bool = False
 
 
 ASpecificLocalConf = TypeVar("ASpecificLocalConf", bound=LocalConf)
@@ -478,7 +479,7 @@ class LocalEnv(Env[ASpecificLocalConf]):
             print(Rule("[bold green]LocalEnv Logs Begin[/bold green]", style="dark_orange"))
             table = Table(title="Run Info", show_header=False)
             table.add_column("Key", style="bold cyan")
-            table.add_column("Value", style="bold magenta", no_wrap=True)
+            table.add_column("Value", style="bold magenta")
             table.add_row("Entry", entry)
             table.add_row("Local Path", local_path or "")
             table.add_row("Env", "\n".join(f"{k}:{v}" for k, v in env.items()))
@@ -504,43 +505,50 @@ class LocalEnv(Env[ASpecificLocalConf]):
             if process.stdout is None or process.stderr is None:
                 raise RuntimeError("The subprocess did not correctly create stdout/stderr pipes")
 
-            stdout_fd = process.stdout.fileno()
-            stderr_fd = process.stderr.fileno()
+            if self.conf.live_output:
+                stdout_fd = process.stdout.fileno()
+                stderr_fd = process.stderr.fileno()
 
-            poller = select.poll()
-            poller.register(stdout_fd, select.POLLIN)
-            poller.register(stderr_fd, select.POLLIN)
+                poller = select.poll()
+                poller.register(stdout_fd, select.POLLIN)
+                poller.register(stderr_fd, select.POLLIN)
 
-            combined_output = ""
-            while True:
-                if process.poll() is not None:
-                    break
-                events = poller.poll(100)
-                for fd, event in events:
-                    if event & select.POLLIN:
-                        if fd == stdout_fd:
-                            while True:
-                                output = process.stdout.readline()
-                                if output == "":
-                                    break
-                                Console().print(output.strip(), markup=False)
-                                combined_output += output
-                        elif fd == stderr_fd:
-                            while True:
-                                error = process.stderr.readline()
-                                if error == "":
-                                    break
-                                Console().print(error.strip(), markup=False)
-                                combined_output += error
+                combined_output = ""
+                while True:
+                    if process.poll() is not None:
+                        break
+                    events = poller.poll(100)
+                    for fd, event in events:
+                        if event & select.POLLIN:
+                            if fd == stdout_fd:
+                                while True:
+                                    output = process.stdout.readline()
+                                    if output == "":
+                                        break
+                                    Console().print(output.strip(), markup=False)
+                                    combined_output += output
+                            elif fd == stderr_fd:
+                                while True:
+                                    error = process.stderr.readline()
+                                    if error == "":
+                                        break
+                                    Console().print(error.strip(), markup=False)
+                                    combined_output += error
 
-            # Capture any final output
-            remaining_output, remaining_error = process.communicate()
-            if remaining_output:
-                Console().print(remaining_output.strip(), markup=False)
-                combined_output += remaining_output
-            if remaining_error:
-                Console().print(remaining_error.strip(), markup=False)
-                combined_output += remaining_error
+                # Capture any final output
+                remaining_output, remaining_error = process.communicate()
+                if remaining_output:
+                    Console().print(remaining_output.strip(), markup=False)
+                    combined_output += remaining_output
+                if remaining_error:
+                    Console().print(remaining_error.strip(), markup=False)
+                    combined_output += remaining_error
+            else:
+                # Sacrifice real-time output to avoid possible standard I/O hangs
+                out, err = process.communicate()
+                Console().print(out, end="", markup=False)
+                Console().print(err, end="", markup=False)
+                combined_output = out + err
 
             return_code = process.returncode
             print(Rule("[bold green]LocalEnv Logs End[/bold green]", style="dark_orange"))
@@ -645,25 +653,6 @@ class QlibDockerConf(DockerConf):
     shm_size: str | None = "16g"
     enable_gpu: bool = True
     enable_cache: bool = False
-
-
-class DMDockerConf(DockerConf):
-    model_config = SettingsConfigDict(env_prefix="DM_DOCKER_")
-
-    build_from_dockerfile: bool = True
-    dockerfile_folder_path: Path = Path(__file__).parent.parent / "scenarios" / "data_mining" / "docker"
-    image: str = "local_dm:latest"
-    mount_path: str = "/workspace/dm_workspace/"
-    default_entry: str = "python train.py"
-    extra_volumes: dict = {
-        str(
-            Path("~/.rdagent/.data/physionet.org/files/mimic-eicu-fiddle-feature/1.0.0/FIDDLE_mimic3/")
-            .expanduser()
-            .resolve()
-            .absolute()
-        ): "/root/.data/"
-    }
-    shm_size: str | None = "16g"
 
 
 class KGDockerConf(DockerConf):
@@ -883,7 +872,7 @@ class DockerEnv(Env[DockerConf]):
             table.add_row("Container Name", container.name)
             table.add_row("Entry", entry)
             table.add_row("Env", "\n".join(f"{k}:{v}" for k, v in env.items()))
-            table.add_row("Volumes", "\n".join(f"{k}:{v}" for k, v in volumes.items()))
+            table.add_row("Volumes", "\n".join(f"{k}:\n  {v}" for k, v in volumes.items()))
             print(table)
             from rich.markup import escape
             for log in logs:
@@ -921,28 +910,6 @@ class QTDockerEnv(DockerEnv):
             logger.info("We are downloading!")
             cmd = "python -m qlib.run.get_data qlib_data --target_dir ~/.qlib/qlib_data/cn_data --region cn --interval 1d --delete_old False"
             self.run(entry=cmd)
-        else:
-            logger.info("Data already exists. Download skipped.")
-
-
-class DMDockerEnv(DockerEnv):
-    """Qlib Torch Docker"""
-
-    def __init__(self, conf: DockerConf = DMDockerConf()):
-        super().__init__(conf)
-
-    def prepare(self, username: str, password: str) -> None:
-        """
-        Download image & data if it doesn't exist
-        """
-        super().prepare()
-        data_path = next(iter(self.conf.extra_volumes.keys()))
-        if not (Path(data_path)).exists():
-            logger.info("We are downloading!")
-            cmd = "wget -r -N -c -np --user={} --password={} -P ~/.rdagent/.data/ https://physionet.org/files/mimic-eicu-fiddle-feature/1.0.0/".format(
-                username, password
-            )
-            os.system(cmd)
         else:
             logger.info("Data already exists. Download skipped.")
 
