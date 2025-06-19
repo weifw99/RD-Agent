@@ -7,6 +7,7 @@ from litellm import (
     completion,
     completion_cost,
     embedding,
+    supports_function_calling,
     supports_response_schema,
     token_counter,
 )
@@ -97,6 +98,12 @@ class LiteLLMAPIBackend(APIBackend):
         """
         if json_mode and supports_response_schema(model=LITELLM_SETTINGS.chat_model):
             kwargs["response_format"] = {"type": "json_object"}
+        elif not supports_response_schema(model=LITELLM_SETTINGS.chat_model) and "response_format" in kwargs:
+            logger.warning(
+                f"{LogColors.RED}Model {LITELLM_SETTINGS.chat_model} does not support response schema, ignoring response_format argument.{LogColors.END}",
+                tag="llm_messages",
+            )
+            kwargs.pop("response_format")
 
         if LITELLM_SETTINGS.log_llm_chat_content:
             logger.info(self._build_log_messages(messages), tag="llm_messages")
@@ -192,3 +199,9 @@ class LiteLLMAPIBackend(APIBackend):
         )
         '''
         return content, finish_reason
+
+    def support_function_calling(self) -> bool:
+        """
+        Check if the backend supports function calling
+        """
+        return supports_function_calling(model=LITELLM_SETTINGS.chat_model) and LITELLM_SETTINGS.enable_function_call
