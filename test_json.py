@@ -365,3 +365,43 @@ def test_json_parse5():
     # TypeAdapter(JsonTargetType).validate_json(transform_json_string( all_response ))
 
 
+
+import re
+
+def extract_keys_from_malformed_json(json_str):
+    # 匹配所有形式的 "key": 或 'key':
+    pattern = r'["\']([\w\-\.]+)["\']\s*:'
+    keys = set(re.findall(pattern, json_str))
+    return keys
+
+
+def test_json_parse6():
+
+    # 示例（非规范 JSON）
+    bad_json = '''
+    {
+      name: "Alice",
+      "age": 30,
+      'email': 'alice@example.com',
+      address: { city: "Beijing", "zip":100000 },
+      "roles": ["admin", "editor"]
+    }
+    '''
+
+    bad_json = '''
+    {
+    "final_decision": False,
+    "final_feedback": "The implementation of the GRUTimeSeriesModel is incorrect due to several issues. The model class does not accept the 'num_timesteps' parameter in its constructor, which is required for initializing a time series model according to the scenario description. Additionally, there is no code to save the output tensor as expected by the user. The model should also be properly documented and configured with static hyperparameters as described in the scenario."
+}
+    '''
+
+    bad_json = '''
+    {
+    "code": "import torch\nimport torch.nn as nn\n\nclass GRUTimeSeriesModel(nn.Module):\n    def __init__(self, num_features=10, hidden_size=64, num_layers=1):\n        super(GRUTimeSeriesModel, self).__init__()\n        \n        # Initialize the GRU layer\n        self.gru = nn.GRU(input_size=num_features, hidden_size=hidden_size, num_layers=num_layers, batch_first=True)\n\n        # Initialize the fully connected layer for output\n        self.fc = nn.Linear(hidden_size, 1)\n        \n    def forward(self, x):\n        # Get the GRU layer output and final hidden state\n        gru_out, _ = self.gru(x)\n        \n        # Take the last time step's output from the GRU layer\n        last_output = gru_out[:, -1, :]\n        \n        # Pass it through the fully connected layer to get the prediction\n        y_pred = self.fc(last_output)\n        \n        return y_pred\n\n# Set model_cls to be the GRUTimeSeriesModel class\nmodel_cls = GRUTimeSeriesModel"
+}
+    '''
+
+    bad_json = 'fasfasv'
+
+    all_keys = extract_keys_from_malformed_json(bad_json)
+    print(all_keys)
