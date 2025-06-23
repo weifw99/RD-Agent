@@ -55,6 +55,7 @@ task:
         class: GeneralPTNN
         module_path: qlib.contrib.model.pytorch_general_nn
         kwargs:
+            seed: 42
             n_epochs: 8
             lr: 1e-3
             early_stop: 3
