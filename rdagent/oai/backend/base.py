@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any, Optional, cast, Dict
 
 import pytz
-from pydantic import TypeAdapter
+from pydantic import BaseModel, TypeAdapter
 
 from rdagent.core.exception import PolicyError
 from rdagent.core.utils import LLM_CACHE_SEED_GEN, SingletonBaseClass
@@ -275,6 +275,11 @@ class APIBackend(ABC):
         *args,
         **kwargs,
     ) -> str:
+        """
+        Responseible for building messages and logging messages
+
+        TODO: What is weird is that the function is called before we seperate embeddings and chat completion.
+        """
         if former_messages is None:
             former_messages = []
         messages = self._build_messages(
@@ -447,7 +452,7 @@ class APIBackend(ABC):
         all_response = ""
         new_messages = deepcopy(messages)
         # Loop to get a full response
-        try_n = 10
+        try_n = 6
         for i_ in range(try_n):  # for some long code, 3 times may not enough for reasoning models
             logger.warning(f"_create_chat_completion_auto_continue, _create_chat_completion_add_json_in_prompt try_n: {try_n}_{i_}, new_messages: {new_messages}, json_mode: {json_mode}, json_target_type: {json_target_type}")
             if json_mode and add_json_in_prompt:
@@ -471,6 +476,7 @@ class APIBackend(ABC):
             match = re.search(r"<think>(.*?)</think>(.*)", all_response, re.DOTALL)
             _, all_response = match.groups() if match else ("", all_response)
 
+        # 3) format checking
         if json_mode:
             try:
                 json.loads(all_response)
@@ -515,6 +521,13 @@ class APIBackend(ABC):
                 logger.warning(f"validate_json : execute TypeAdapter json_target_type:{json_target_type}, match:{match}")
                 TypeAdapter(json_target_type).validate_json(all_response)
             logger.warning(f"validate_json end _create_chat_completion_auto_continue , json_target_type: {json_target_type}, all_response: {all_response}")
+            TypeAdapter(json_target_type).validate_json(all_response)
+        if (response_format := kwargs.get("response_format")) is not None:
+            if issubclass(response_format, BaseModel):
+                # It may raise TypeError if initialization fails
+                response_format(**json.loads(all_response))
+            else:
+                logger.warning(f"Unknown response_format: {response_format}, skipping validation.")
         if self.dump_chat_cache:
             self.cache.chat_set(input_content_json, all_response)
         return all_response
