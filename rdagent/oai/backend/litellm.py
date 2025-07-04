@@ -41,6 +41,7 @@ class LiteLLMSettings(LLMSettings):
 
 LITELLM_SETTINGS = LiteLLMSettings()
 logger.info(f"{LITELLM_SETTINGS}")
+logger.log_object(LITELLM_SETTINGS.model_dump(), tag="LITELLM_SETTINGS")
 ACC_COST = 0.0
 
 
