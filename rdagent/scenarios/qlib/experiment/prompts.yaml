@@ -144,7 +144,7 @@ qlib_factor_from_report_rich_style_description : |-
 qlib_factor_experiment_setting: |-
   | Dataset 📊 | Model 🤖    | Factors 🌟       | Data Split  🧮                                   |
   |---------|----------|---------------|-------------------------------------------------|
-  | CSI300  | LGBModel | Alpha158 Plus | Train: 2010-01-01 to 2018-12-31 <br> Valid: 2019-01-01 to 2020-12-31 <br> Test &nbsp;: 2021-01-01 to 2025-05-15 |
+  | zz2000  | LGBModel | Alpha158 Plus | Train: 2010-01-01 to 2019-12-31 <br> Valid: 2020-01-01 to 2021-12-31 <br> Test &nbsp;: 2022-01-01 to 2025-05-15 |
 
 
 qlib_model_background: |-
@@ -233,4 +233,4 @@ qlib_model_rich_style_description: |-
 qlib_model_experiment_setting: |-
   | Dataset 📊 | Model 🤖    | Factors 🌟       | Data Split  🧮                                   |
   |---------|----------|---------------|-------------------------------------------------|
-  | CSI300  | RDAgent-dev | 20 factors (Alpha158)  | Train: 2010-01-01 to 2018-12-31 <br> Valid: 2019-01-01 to 2020-12-31 <br> Test &nbsp;: 2021-01-01 to 2025-05-15 |
+  | zz2000  | RDAgent-dev | 20 factors (Alpha158)  | Train: 2010-01-01 to 2019-12-31 <br> Valid: 2020-01-01 to 2021-12-31 <br> Test &nbsp;: 2022-01-01 to 2025-05-15 |
