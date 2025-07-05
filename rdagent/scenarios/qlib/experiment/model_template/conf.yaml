@@ -55,8 +55,9 @@ task:
         class: GeneralPTNN
         module_path: qlib.contrib.model.pytorch_general_nn
         kwargs:
+            save_path: "./models"
             seed: 42
-            n_epochs: 8
+            n_epochs: 6
             lr: 1e-3
             early_stop: 3
             batch_size: 2000
