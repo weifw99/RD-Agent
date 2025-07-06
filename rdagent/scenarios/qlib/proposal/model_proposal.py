@@ -113,7 +113,9 @@ class QlibModelHypothesis2Experiment(ModelHypothesis2Experiment):
         }, True
 
     def convert_response(self, response: str, hypothesis: Hypothesis, trace: Trace) -> ModelExperiment:
-        response_dict = json.loads(response)
+
+        response_dict = self.hypothesis_response_parse(response)
+        # response_dict = json.loads(response)
         tasks = []
         for model_name in response_dict:
             description = response_dict[model_name]["description"]
