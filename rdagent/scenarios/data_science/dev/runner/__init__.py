@@ -1,6 +1,3 @@
-from pathlib import Path
-from typing import Dict
-
 import pandas as pd
 
 from rdagent.app.data_science.conf import DS_RD_SETTING
@@ -17,7 +14,6 @@ from rdagent.components.coder.CoSTEER.evolving_strategy import (
     MultiProcessEvolvingStrategy,
 )
 from rdagent.components.coder.CoSTEER.task import CoSTEERTask
-from rdagent.components.coder.data_science.conf import get_ds_env
 from rdagent.components.coder.data_science.share.eval import ModelDumpEvaluator
 from rdagent.core.exception import RunnerError
 from rdagent.core.scenario import Scenario
@@ -26,7 +22,6 @@ from rdagent.oai.llm_utils import APIBackend, md5_hash
 from rdagent.scenarios.data_science.dev.runner.eval import DSCoSTEERCoSTEEREvaluator
 from rdagent.utils.agent.ret import PythonBatchEditOut
 from rdagent.utils.agent.tpl import T
-from rdagent.utils.env import DockerEnv, MLEBDockerConf
 
 
 class DSRunnerMultiProcessEvolvingStrategy(MultiProcessEvolvingStrategy):
@@ -40,16 +35,23 @@ class DSRunnerMultiProcessEvolvingStrategy(MultiProcessEvolvingStrategy):
         if prev_task_feedback is None:
             # if no prev_tak_feedback, it is the first loop; we do not make any changes and goto evaluators directly.
             return {}
-
-        task_information_str = target_task.get_task_information()
-        # 1. code
-        system_prompt = T(".prompts:DSCoSTEER_debugger.system").r(
-            task_desc=task_information_str,
-            out_spec=PythonBatchEditOut.get_spec(with_del=False),
-        )
-        user_prompt = T(".prompts:DSCoSTEER_debugger.user").r(
+        if prev_task_feedback.hyperparameter_tuning_decision:
+            task_information_str = target_task.get_task_information()
+            # 1. code
+            system_prompt = T(".prompts:DSCoSTEER.system_refine").r(
+                out_spec=PythonBatchEditOut.get_spec(with_del=False),
+            )
+        else:
+            task_information_str = target_task.get_task_information()
+            # 1. code
+            system_prompt = T(".prompts:DSCoSTEER.system_refine").r(
+                task_desc=task_information_str,
+                out_spec=PythonBatchEditOut.get_spec(with_del=False),
+            )
+        user_prompt = T(".prompts:DSCoSTEER.user").r(
             code=workspace.all_codes,
             feedback=prev_task_feedback,
+            hyperparameter_tuning_suggestion=prev_task_feedback.hyperparameter_tuning_suggestion,
         )
 
         batch_edit = PythonBatchEditOut.extract_output(
@@ -130,6 +132,7 @@ class DSCoSTEERRunner(CoSTEER):
             logger.error("Metrics file (scores.csv) is not generated.")
             raise RunnerError(f"Metrics file (scores.csv) is not generated")
         exp.result = pd.read_csv(score_fp, index_col=0)
+        exp.running_info.running_time = exp.experiment_workspace.running_info.running_time
 
         # 2) if mle-bench, then the submission format checking will be used.
         # DockerEnv for MLEBench submission validation

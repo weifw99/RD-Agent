@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Dict
 
 from rdagent.components.coder.CoSTEER.evaluators import CoSTEERSingleFeedback
@@ -136,7 +137,7 @@ class FactorMultiProcessEvolvingStrategy(MultiProcessEvolvingStrategy):
                 queried_similar_error_knowledge_to_render = queried_similar_error_knowledge_to_render[:-1]
         for _ in range(10):
             try:
-                response_str = APIBackend(
+                response = APIBackend(
                     use_chat_cache=FACTOR_COSTEER_SETTINGS.coder_use_cache
                 ).build_messages_and_create_chat_completion(
                     user_prompt=user_prompt,
@@ -146,21 +147,21 @@ class FactorMultiProcessEvolvingStrategy(MultiProcessEvolvingStrategy):
                 )
 
                 try:
-                    code = json.loads(response_str)["code"]
-                except json.JSONDecodeError:
+                    code = json.loads(response)["code"]
+                except json.decoder.JSONDecodeError:
                     print(f"{'##' * 10} FactorMultiProcessEvolvingStrategy.implement_one_task：JSON 解析错误, json response: {response_str}")
 
-                    # 提取 code 内容（中间双引号内的部分）
-                    import re
-                    match = re.search(r'"code": "(.*)"\s*}', response_str, re.DOTALL)
+                    # extract python code block
+                    match = re.search(r"```python(.*?)```", response, re.DOTALL)
                     if match:
-                        code_raw = match.group(1)
-                        # 替换字符串中的特殊字符为合法 JSON 字符串格式
-                        code = code_raw
+                        code = match.group(1).strip()
                         print(f"match_json  code fixed code: {code}")
+                    else:
+                        raise  # continue to retry
 
                 return code
-            except json.decoder.JSONDecodeError:
+
+            except (json.decoder.JSONDecodeError, KeyError):
                 pass
         else:
             return ""  # return empty code if failed to get code after 10 attempts

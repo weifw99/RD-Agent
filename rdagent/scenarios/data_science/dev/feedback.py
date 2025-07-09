@@ -61,32 +61,6 @@ class DSExperiment2Feedback(Experiment2Feedback):
                 f"The current score is {cur_score}, while the SOTA score is {sota_score}. "
                 f"{'In this competition, higher is better.' if self.scen.metric_direction else 'In this competition, lower is better.'}"
             )
-        if DS_RD_SETTING.rule_base_eval:
-            if sota_exp:
-                if cur_score > sota_score:
-                    return HypothesisFeedback(
-                        observations="The current score bigger than the SOTA score.",
-                        hypothesis_evaluation="The current score is bigger than the SOTA score.",
-                        new_hypothesis="No new hypothesis provided",
-                        reason="The current score is bigger than the SOTA score.",
-                        decision=True if self.scen.metric_direction else False,
-                    )
-                elif cur_score < sota_score:
-                    return HypothesisFeedback(
-                        observations="The current score smaller than the SOTA score.",
-                        hypothesis_evaluation="The current score is smaller than the SOTA score.",
-                        new_hypothesis="No new hypothesis provided",
-                        reason="The current score is smaller than the SOTA score.",
-                        decision=False if self.scen.metric_direction else True,
-                    )
-                else:
-                    return HypothesisFeedback(
-                        observations="The current score equals to the SOTA score.",
-                        hypothesis_evaluation="The current score equals to the SOTA score.",
-                        new_hypothesis="No new hypothesis provided",
-                        reason="The current score equals to the SOTA score.",
-                        decision=False,
-                    )
 
         eda_output = exp.experiment_workspace.file_dict.get("EDA.md", None)
         system_prompt = T(".prompts:exp_feedback.system").r(
@@ -109,7 +83,7 @@ class DSExperiment2Feedback(Experiment2Feedback):
             )
         )
 
-        if resp_dict.get("Evaluation Aligned With Task", "no") == "no":
+        if evaluation_not_aligned := dict_get_with_warning(resp_dict, "Evaluation Aligned With Task", "no") == "no":
             exp.result = None
 
         # Currently, we do not use `observations`, `hypothesis_evaluation`, and `new_hypothesis` in the framework.
@@ -118,11 +92,17 @@ class DSExperiment2Feedback(Experiment2Feedback):
             observations=dict_get_with_warning(resp_dict, "Observations", "No observations provided"),
             hypothesis_evaluation=dict_get_with_warning(resp_dict, "Feedback for Hypothesis", "No feedback provided"),
             new_hypothesis=dict_get_with_warning(resp_dict, "New Hypothesis", "No new hypothesis provided"),
-            reason=dict_get_with_warning(resp_dict, "Reasoning", "No reasoning provided"),
+            reason=dict_get_with_warning(resp_dict, "Reasoning", "No reasoning provided")
+            + ("\nRejected because evaluation code not aligned with task." if evaluation_not_aligned else ""),
             code_change_summary=dict_get_with_warning(
                 resp_dict, "Code Change Summary", "No code change summary provided"
             ),
-            decision=convert2bool(dict_get_with_warning(resp_dict, "Replace Best Result", "no")),
+            decision=(
+                False
+                if evaluation_not_aligned
+                else convert2bool(dict_get_with_warning(resp_dict, "Replace Best Result", "no"))
+            ),
+            eda_improvement=dict_get_with_warning(resp_dict, "EDA Improvement", "no"),  # EDA improvement suggestion
         )
 
         if hypothesis_feedback and DS_RD_SETTING.enable_knowledge_base:

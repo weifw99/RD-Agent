@@ -1,15 +1,17 @@
 from __future__ import annotations
 
+import io
 import json
 import re
 import sqlite3
 import time
+import tokenize
 import uuid
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional, cast, Dict
+from typing import Any, Callable, List, Optional, Tuple, cast, Dict
 
 import pytz
 from pydantic import BaseModel, TypeAdapter
@@ -29,6 +31,132 @@ try:
     openai_imported = True
 except ImportError:
     openai_imported = False
+
+
+class JSONParser:
+    """JSON parser supporting multiple strategies"""
+
+    def __init__(self) -> None:
+        self.strategies: List[Callable[[str], str]] = [
+            self._direct_parse,
+            self._extract_from_code_block,
+            self._fix_python_syntax,
+            self._extract_with_fix_combined,
+        ]
+
+    def parse(self, content: str) -> str:
+        """Parse JSON content, automatically trying multiple strategies"""
+        original_content = content
+
+        for strategy in self.strategies:
+            try:
+                return strategy(original_content)
+            except json.JSONDecodeError:
+                continue
+
+        # All strategies failed
+        raise json.JSONDecodeError("Failed to parse JSON after all attempts", original_content, 0)
+
+    def _direct_parse(self, content: str) -> str:
+        """Strategy 1: Direct parsing (including handling extra data)"""
+        try:
+            json.loads(content)
+            return content
+        except json.decoder.JSONDecodeError as e:
+            if "Extra data" in str(e):
+                return self._extract_first_json(content)
+            else:
+                logger.warning(
+                    f"_create_chat_completion_auto_continue json loads Failed to parse json: {e}, try to parse json in code block")
+                # 移除<think></think>标签内的数据
+                from rdagent.oai.llm_utils import remove_tag_with_content
+                all_response = remove_tag_with_content(content, 'think')
+
+                from rdagent.oai.llm_utils import extract_json_objects, parse_json_result
+                json_result = extract_json_objects(all_response)
+                json_str = parse_json_result(all_response)
+                # match_json = re.search(r"```json(.*)```", all_response, re.DOTALL)
+                # logger.warning(f"_create_chat_completion_auto_continue json search, match_json: {match_json}, match: {match}")
+                # if match_json:
+                #     all_response = match_json.group(0)
+                #     all_response = all_response.replace('```json', '').replace('```', '').strip()
+                #     print(f"match_json all_response: {all_response}")
+                #     if not all_response.endswith('}'):
+                #         all_response = parse_json_result(all_response)
+                if len(json_str) > 0:
+                    all_response = json_str
+                    print(f"match_parse_json all_response: {all_response}")
+                elif len(json_result) > 0:
+                    all_response = str(json_result[len(json_result) - 1])
+                    print(f"json_result all_response: {all_response}")
+                else:
+                    all_response = all_response
+
+                # 移除尾随逗号（包括对象和数组中的）
+                from rdagent.oai.llm_utils import clean_json_str
+                all_response = clean_json_str(all_response)
+
+                logger.warning(f"_create_chat_completion_auto_continue json loads all response: {all_response}")
+                # json.loads(all_response)
+
+                return all_response
+
+    def _extract_from_code_block(self, content: str) -> str:
+        """Strategy 2: Extract JSON from code block"""
+        match = re.search(r"```json\s*(.*?)\s*```", content, re.DOTALL)
+        if not match:
+            raise json.JSONDecodeError("No JSON code block found", content, 0)
+
+        json_content = match.group(1).strip()
+        return self._direct_parse(json_content)
+
+    def _fix_python_syntax(self, content: str) -> str:
+        """Strategy 3: Fix Python syntax before parsing"""
+        fixed = self._fix_python_booleans(content)
+        return self._direct_parse(fixed)
+
+    def _extract_with_fix_combined(self, content: str) -> str:
+        """Strategy 4: Combined strategy - fix Python syntax first, then extract the first JSON object"""
+        fixed = self._fix_python_booleans(content)
+
+        # Try to extract code block from the fixed content
+        match = re.search(r"```json\s*(.*?)\s*```", fixed, re.DOTALL)
+        if match:
+            fixed = match.group(1).strip()
+
+        return self._direct_parse(fixed)
+
+    @staticmethod
+    def _fix_python_booleans(json_str: str) -> str:
+        """Safely fix Python-style booleans to JSON standard format using tokenize"""
+        replacements = {"True": "true", "False": "false", "None": "null"}
+
+        try:
+            out = []
+            io_string = io.StringIO(json_str)
+            tokens = tokenize.generate_tokens(io_string.readline)
+
+            for toknum, tokval, _, _, _ in tokens:
+                if toknum == tokenize.NAME and tokval in replacements:
+                    out.append(replacements[tokval])
+                else:
+                    out.append(tokval)
+
+            result = "".join(out)
+            return result
+
+        except (tokenize.TokenError, json.JSONDecodeError):
+            # If tokenize fails, fallback to regex method
+            for python_val, json_val in replacements.items():
+                json_str = re.sub(rf"\b{python_val}\b", json_val, json_str)
+            return json_str
+
+    @staticmethod
+    def _extract_first_json(response: str) -> str:
+        """Extract the first complete JSON object, ignoring extra content"""
+        decoder = json.JSONDecoder()
+        obj, _ = decoder.raw_decode(response)
+        return json.dumps(obj)
 
 
 class SQliteLazyCache(SingletonBaseClass):
@@ -279,6 +407,18 @@ class APIBackend(ABC):
         Responseible for building messages and logging messages
 
         TODO: What is weird is that the function is called before we seperate embeddings and chat completion.
+
+        Parameters
+        ----------
+        user_prompt : str
+        system_prompt : str | None
+        former_messages : list | None
+        response_format : BaseModel | dict
+            A BaseModel based on pydantic or a dict
+        **kwargs
+        Returns
+        -------
+        str
         """
         if former_messages is None:
             former_messages = []
@@ -478,40 +618,9 @@ class APIBackend(ABC):
 
         # 3) format checking
         if json_mode:
-            try:
-                json.loads(all_response)
-            except json.decoder.JSONDecodeError as e:
-                logger.warning(f"_create_chat_completion_auto_continue json loads Failed to parse json: {e}, try to parse json in code block")
-                # 移除<think></think>标签内的数据
-                from rdagent.oai.llm_utils import remove_tag_with_content
-                all_response = remove_tag_with_content(all_response, 'think')
+            parser = JSONParser()
+            all_response = parser.parse(all_response)
 
-                from rdagent.oai.llm_utils import extract_json_objects, parse_json_result
-                json_result = extract_json_objects(all_response)
-                json_str = parse_json_result(all_response)
-                # match_json = re.search(r"```json(.*)```", all_response, re.DOTALL)
-                # logger.warning(f"_create_chat_completion_auto_continue json search, match_json: {match_json}, match: {match}")
-                # if match_json:
-                #     all_response = match_json.group(0)
-                #     all_response = all_response.replace('```json', '').replace('```', '').strip()
-                #     print(f"match_json all_response: {all_response}")
-                #     if not all_response.endswith('}'):
-                #         all_response = parse_json_result(all_response)
-                if len(json_str) > 0:
-                    all_response = json_str
-                    print(f"match_parse_json all_response: {all_response}")
-                elif len(json_result) > 0:
-                    all_response = str(json_result[len(json_result) - 1])
-                    print(f"json_result all_response: {all_response}")
-                else:
-                    all_response = all_response
-
-                # 移除尾随逗号（包括对象和数组中的）
-                from rdagent.oai.llm_utils import clean_json_str
-                all_response = clean_json_str(all_response)
-
-                logger.warning(f"_create_chat_completion_auto_continue json loads all response: {all_response}")
-                # json.loads(all_response)
         if json_target_type is not None:
             logger.warning(f"validate_json start _create_chat_completion_auto_continue , json_target_type: {json_target_type}, all_response: {all_response}")
             match = re.search(r'"code": "(.*)"\s*}', all_response, re.DOTALL)
@@ -523,7 +632,7 @@ class APIBackend(ABC):
             logger.warning(f"validate_json end _create_chat_completion_auto_continue , json_target_type: {json_target_type}, all_response: {all_response}")
             TypeAdapter(json_target_type).validate_json(all_response)
         if (response_format := kwargs.get("response_format")) is not None:
-            if issubclass(response_format, BaseModel):
+            if not isinstance(response_format, dict) and issubclass(response_format, BaseModel):
                 # It may raise TypeError if initialization fails
                 response_format(**json.loads(all_response))
             else:
@@ -556,7 +665,7 @@ class APIBackend(ABC):
         return [content_to_embedding_dict[content] for content in input_content_list]  # type: ignore[misc]
 
     @abstractmethod
-    def support_function_calling(self) -> bool:
+    def supports_response_schema(self) -> bool:
         """
         Check if the backend supports function calling
         """

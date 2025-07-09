@@ -41,6 +41,7 @@ class LiteLLMSettings(LLMSettings):
 
 LITELLM_SETTINGS = LiteLLMSettings()
 logger.info(f"{LITELLM_SETTINGS}")
+logger.log_object(LITELLM_SETTINGS.model_dump(), tag="LITELLM_SETTINGS")
 ACC_COST = 0.0
 
 
@@ -200,8 +201,8 @@ class LiteLLMAPIBackend(APIBackend):
         '''
         return content, finish_reason
 
-    def support_function_calling(self) -> bool:
+    def supports_response_schema(self) -> bool:
         """
         Check if the backend supports function calling
         """
-        return supports_function_calling(model=LITELLM_SETTINGS.chat_model) and LITELLM_SETTINGS.enable_function_call
+        return supports_response_schema(model=LITELLM_SETTINGS.chat_model) and LITELLM_SETTINGS.enable_response_schema
