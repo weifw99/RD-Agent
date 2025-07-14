@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, List, Optional, Tuple, cast, Dict
+from typing import Any, Callable, List, Optional, Tuple, cast, Dict, Type, Union
 
 import pytz
 from pydantic import BaseModel, TypeAdapter
@@ -36,13 +36,14 @@ except ImportError:
 class JSONParser:
     """JSON parser supporting multiple strategies"""
 
-    def __init__(self) -> None:
+    def __init__(self, add_json_in_prompt: bool = False) -> None:
         self.strategies: List[Callable[[str], str]] = [
             self._direct_parse,
             self._extract_from_code_block,
             self._fix_python_syntax,
             self._extract_with_fix_combined,
         ]
+        self.add_json_in_prompt = add_json_in_prompt
 
     def parse(self, content: str) -> str:
         """Parse JSON content, automatically trying multiple strategies"""
@@ -55,7 +56,16 @@ class JSONParser:
                 continue
 
         # All strategies failed
-        raise json.JSONDecodeError("Failed to parse JSON after all attempts", original_content, 0)
+        if not self.add_json_in_prompt:
+            error = json.JSONDecodeError(
+                "Failed to parse JSON after all attempts, maybe because 'messages' must contain the word 'json' in some form",
+                original_content,
+                0,
+            )
+            error.message = "Failed to parse JSON after all attempts, maybe because 'messages' must contain the word 'json' in some form"  # type: ignore[attr-defined]
+            raise error
+        else:
+            raise json.JSONDecodeError("Failed to parse JSON after all attempts", original_content, 0)
 
     def _direct_parse(self, content: str) -> str:
         """Strategy 1: Direct parsing (including handling extra data)"""
@@ -566,11 +576,15 @@ class APIBackend(ABC):
         seed: Optional[int] = None,
         json_target_type: Optional[str] = None,
         add_json_in_prompt: bool = False,
+        response_format: Optional[Union[dict, Type[BaseModel]]] = None,
         **kwargs: Any,
     ) -> str:
         """
         Call the chat completion function and automatically continue the conversation if the finish_reason is length.
         """
+
+        if response_format is None and json_mode:
+            response_format = {"type": "json_object"}
 
         # 0) return directly if cache is hit
         if seed is None and LLM_SETTINGS.use_auto_chat_cache_seed_gen:
@@ -595,11 +609,11 @@ class APIBackend(ABC):
         try_n = 6
         for i_ in range(try_n):  # for some long code, 3 times may not enough for reasoning models
             logger.warning(f"_create_chat_completion_auto_continue, _create_chat_completion_add_json_in_prompt try_n: {try_n}_{i_}, new_messages: {new_messages}, json_mode: {json_mode}, json_target_type: {json_target_type}")
-            if json_mode and add_json_in_prompt:
+            if response_format == {"type": "json_object"} and add_json_in_prompt:
                 self._add_json_in_prompt(new_messages)
             response, finish_reason = self._create_chat_completion_inner_function(
                 messages=new_messages,
-                json_mode=json_mode,
+                response_format=response_format,
                 **kwargs,
             )
             logger.warning(f"_create_chat_completion_auto_continue, _create_chat_completion_add_json_in_prompt try_n: {try_n}_{i_}, response length: {len(response)},response: {response}, finish_reason: {finish_reason}, json_mode: {json_mode}, json_target_type: {json_target_type}" )
@@ -613,28 +627,44 @@ class APIBackend(ABC):
 
         # 2) refine the response and return
         if LLM_SETTINGS.reasoning_think_rm:
+            # Strategy 1: Try to match complete <think>...</think> pattern
             match = re.search(r"<think>(.*?)</think>(.*)", all_response, re.DOTALL)
-            _, all_response = match.groups() if match else ("", all_response)
+            if match:
+                _, all_response = match.groups()
+            else:
+                # Strategy 2: If no complete match, try to match only </think>
+                match = re.search(r"</think>(.*)", all_response, re.DOTALL)
+                if match:
+                    all_response = match.group(1)
+                # If no match at all, keep original content
 
         # 3) format checking
-        if json_mode:
-            parser = JSONParser()
+        if response_format == {"type": "json_object"} or json_target_type:
+            parser = JSONParser(add_json_in_prompt=add_json_in_prompt)
             all_response = parser.parse(all_response)
-
-        if json_target_type is not None:
-            logger.warning(f"validate_json start _create_chat_completion_auto_continue , json_target_type: {json_target_type}, all_response: {all_response}")
-            match = re.search(r'"code": "(.*)"\s*}', all_response, re.DOTALL)
-            if json_target_type == Dict[str, str] and match:
-                logger.warning(f"validate_json : not execute TypeAdapter json_target_type:{json_target_type}, match:{match}")
-            else:
-                logger.warning(f"validate_json : execute TypeAdapter json_target_type:{json_target_type}, match:{match}")
+            if json_target_type:
+                # deepseek will enter this branch
+                # TypeAdapter(json_target_type).validate_json(all_response)
+                logger.warning(
+                    f"validate_json start _create_chat_completion_auto_continue , json_target_type: {json_target_type}, all_response: {all_response}")
+                match = re.search(r'"code": "(.*)"\s*}', all_response, re.DOTALL)
+                if json_target_type == Dict[str, str] and match:
+                    logger.warning(
+                        f"validate_json : not execute TypeAdapter json_target_type:{json_target_type}, match:{match}")
+                else:
+                    logger.warning(
+                        f"validate_json : execute TypeAdapter json_target_type:{json_target_type}, match:{match}")
+                    TypeAdapter(json_target_type).validate_json(all_response)
+                logger.warning(
+                    f"validate_json end _create_chat_completion_auto_continue , json_target_type: {json_target_type}, all_response: {all_response}")
                 TypeAdapter(json_target_type).validate_json(all_response)
-            logger.warning(f"validate_json end _create_chat_completion_auto_continue , json_target_type: {json_target_type}, all_response: {all_response}")
-            TypeAdapter(json_target_type).validate_json(all_response)
-        if (response_format := kwargs.get("response_format")) is not None:
+
+        if response_format is not None:
             if not isinstance(response_format, dict) and issubclass(response_format, BaseModel):
                 # It may raise TypeError if initialization fails
                 response_format(**json.loads(all_response))
+            elif response_format == {"type": "json_object"}:
+                logger.info(f"Using OpenAI response format: {response_format}")
             else:
                 logger.warning(f"Unknown response_format: {response_format}, skipping validation.")
         if self.dump_chat_cache:
@@ -691,7 +721,7 @@ class APIBackend(ABC):
     def _create_chat_completion_inner_function(  # type: ignore[no-untyped-def] # noqa: C901, PLR0912, PLR0915
         self,
         messages: list[dict[str, Any]],
-        json_mode: bool = False,
+        response_format: Optional[Union[dict, Type[BaseModel]]] = None,
         *args,
         **kwargs,
     ) -> tuple[str, str | None]:
