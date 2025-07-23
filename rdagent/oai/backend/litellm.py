@@ -49,7 +49,13 @@ ACC_COST = 0.0
 class LiteLLMAPIBackend(APIBackend):
     """LiteLLM implementation of APIBackend interface"""
 
+    _has_logged_settings: bool = False
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
+        if not self.__class__._has_logged_settings:
+            logger.info(f"{LITELLM_SETTINGS}")
+            logger.log_object(LITELLM_SETTINGS.model_dump(), tag="LITELLM_SETTINGS")
+            self.__class__._has_logged_settings = True
         super().__init__(*args, **kwargs)
         litellm.config_path = LITELLM_SETTINGS.litellm_config_path
 
@@ -139,6 +145,7 @@ class LiteLLMAPIBackend(APIBackend):
             temperature=temperature,
             max_tokens=max_tokens,
             reasoning_effort=reasoning_effort,
+            max_retries=0,
             base_url=LITELLM_SETTINGS.chat_openai_base_url,
             api_key=LITELLM_SETTINGS.openai_api_key,
             **kwargs,
