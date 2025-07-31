@@ -50,6 +50,10 @@ class DSCoSTEERCoSTEEREvaluator(CoSTEEREvaluator):
         queried_knowledge: QueriedKnowledge = None,
         **kwargs,
     ) -> DSCoSTEEREvalFeedback:
+        if len(queried_knowledge.task_to_former_failed_traces[target_task.get_task_information()][0]) == 0:
+            enable_hyperparameter_tuning_check = True
+        else:
+            enable_hyperparameter_tuning_check = False
 
         env = get_ds_env(
             extra_volumes={
@@ -57,7 +61,7 @@ class DSCoSTEERCoSTEEREvaluator(CoSTEEREvaluator):
                     "scenarios.data_science.share:scen.input_path"
                 ).r()
             },
-            running_timeout_period=DS_RD_SETTING.full_timeout,
+            running_timeout_period=self.scen.real_full_timeout(),
         )
 
         stdout = implementation.execute(
@@ -129,17 +133,28 @@ class DSCoSTEERCoSTEEREvaluator(CoSTEEREvaluator):
             submission_check_out, submission_ret_code = test_eval.valid(self.scen.competition, implementation)
             stdout += f"\nSubmission check:\n{submission_check_out}\nIf Submission check returns a 'Submission is valid' or similar message, despite some warning messages, you should still consider the submission as valid and give a positive final decision. "
 
+        time_spent_ratio = implementation.running_info.running_time / env.conf.running_timeout_period
+        if (
+            DS_RD_SETTING.time_ratio_limit_to_enable_hyperparameter_tuning is not None
+            and time_spent_ratio > DS_RD_SETTING.time_ratio_limit_to_enable_hyperparameter_tuning
+        ):
+            enable_hyperparameter_tuning_check = False
+            logger.info(
+                f"Time spent ratio {time_spent_ratio:.2f} exceeds the limit {DS_RD_SETTING.time_ratio_limit_to_enable_hyperparameter_tuning}, hyperparameter tuning is disabled."
+            )
+
         system_prompt = T(".prompts:DSCoSTEER_eval.system").r(
             scenario=self.scen.get_scenario_all_desc(eda_output=implementation.file_dict.get("EDA.md", None)),
             is_sub_enabled=test_eval.is_sub_enabled(self.scen.competition),
             task_desc=target_task.get_task_information(),
+            enable_hyperparameter_tuning_check=enable_hyperparameter_tuning_check,
         )
         user_prompt = T(".prompts:DSCoSTEER_eval.user").r(
             code=implementation.all_codes,
             stdout=shrink_text(stdout),
             time_spent=f"{implementation.running_info.running_time:.2f} seconds",
             timeout=f"{env.conf.running_timeout_period} seconds",
-            percent_of_timeout_used=f"{(implementation.running_info.running_time / env.conf.running_timeout_period) * 100:.2f}%",
+            percent_of_timeout_used=f"{time_spent_ratio * 100:.2f}%",
         )
 
         feedback = build_cls_from_json_with_retry(

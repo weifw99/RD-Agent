@@ -31,7 +31,7 @@ class DSRunnerCoSTEERSettings(CoSTEERSettings):
     class Config:
         env_prefix = "DS_Runner_CoSTEER_"
 
-    max_seconds: int = DS_RD_SETTING.full_timeout
+    max_seconds_multiplier: int = 1
     env_type: str = "docker"
     diff_mode: bool = False
     # TODO: extract a function for env and conf.
@@ -61,17 +61,17 @@ class DSRunnerMultiProcessEvolvingStrategy(MultiProcessEvolvingStrategy):
         }
         output_spec, extract_output_fn = output_map[self.settings.diff_mode]
 
-        if prev_task_feedback.hyperparameter_tuning_decision:
-            # Use system_refine for hyperparameter tuning
-            system_prompt = T(".prompts:DSCoSTEER.system_refine").r(
+        if prev_task_feedback.final_decision is False:
+            task_information_str = target_task.get_task_information()
+            # Use system_debugger for error fixing and debugging
+            system_prompt = T(".prompts:DSCoSTEER.system_debugger").r(
+                task_desc=task_information_str,
                 out_spec=output_spec,
                 diff_mode=self.settings.diff_mode,
             )
         else:
-            task_information_str = target_task.get_task_information()
-            # Use system_debugger for error fixing and debugging
+            # Use system_refine for hyperparameter tuning
             system_prompt = T(".prompts:DSCoSTEER.system_refine").r(
-                task_desc=task_information_str,
                 out_spec=output_spec,
                 diff_mode=self.settings.diff_mode,
             )
@@ -83,12 +83,21 @@ class DSRunnerMultiProcessEvolvingStrategy(MultiProcessEvolvingStrategy):
             hyperparameter_tuning_suggestion=prev_task_feedback.hyperparameter_tuning_suggestion,
         )
 
-        batch_edit = extract_output_fn(
-            APIBackend().build_messages_and_create_chat_completion(
-                user_prompt=user_prompt,
-                system_prompt=system_prompt,
+        if self.settings.diff_mode:
+            batch_edit = extract_output_fn(
+                APIBackend().build_messages_and_create_chat_completion(
+                    user_prompt=user_prompt,
+                    system_prompt=system_prompt,
+                ),
+                prefix=workspace.workspace_path,
             )
-        )
+        else:
+            batch_edit = extract_output_fn(
+                APIBackend().build_messages_and_create_chat_completion(
+                    user_prompt=user_prompt,
+                    system_prompt=system_prompt,
+                )
+            )
 
         batch_edit = {k: v for k, v in batch_edit.items() if k in workspace.file_dict.keys()}
 
@@ -138,16 +147,18 @@ class DSCoSTEERRunner(CoSTEER):
             evolving_version=2,
             scen=scen,
             max_loop=DS_RD_SETTING.runner_max_loop,
+            max_seconds=scen.real_full_timeout() * settings.max_seconds_multiplier,
             **kwargs,
         )
 
     def develop(self, exp):
-        bak_sub_tasks = exp.sub_tasks
+        bak_sub_tasks = exp.pending_tasks_list
         exp.sub_tasks = [
             CoSTEERTask(
                 name="Debug running solution",
                 description=f"You'll be provided with the source code and the running and testing stdout. "
                 "Please check the error messages and debug the source code if any errors occur.\n"
+                f"Original task: {bak_sub_tasks[0][0].get_task_information()}\n"
                 f"Current code repo md5: {md5_hash(exp.experiment_workspace.all_codes)}",
             ),
         ]

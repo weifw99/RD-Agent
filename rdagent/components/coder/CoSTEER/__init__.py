@@ -6,13 +6,11 @@ from rdagent.components.coder.CoSTEER.config import CoSTEERSettings
 from rdagent.components.coder.CoSTEER.evaluators import CoSTEERMultiFeedback
 from rdagent.components.coder.CoSTEER.evolvable_subjects import EvolvingItem
 from rdagent.components.coder.CoSTEER.knowledge_management import (
-    CoSTEERKnowledgeBaseV1,
-    CoSTEERKnowledgeBaseV2,
     CoSTEERRAGStrategyV1,
     CoSTEERRAGStrategyV2,
 )
 from rdagent.core.developer import Developer
-from rdagent.core.evaluation import Evaluator, Feedback
+from rdagent.core.evaluation import Evaluator
 from rdagent.core.evolving_agent import EvolvingStrategy, RAGEvoAgent
 from rdagent.core.exception import CoderError
 from rdagent.core.experiment import Experiment
@@ -26,8 +24,9 @@ class CoSTEER(Developer[Experiment]):
         settings: CoSTEERSettings,
         eva: Evaluator,
         es: EvolvingStrategy,
-        evolving_version: int,
         *args,
+        evolving_version: int = 2,
+        max_seconds: int | None = None,
         with_knowledge: bool = True,
         with_feedback: bool = True,
         knowledge_self_gen: bool = True,
@@ -36,8 +35,10 @@ class CoSTEER(Developer[Experiment]):
         **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
+        self.settings = settings
+
         self.max_loop = settings.max_loop if max_loop is None else max_loop
-        self.max_seconds = settings.max_seconds
+        self.max_seconds = max_seconds
         self.knowledge_base_path = (
             Path(settings.knowledge_base_path) if settings.knowledge_base_path is not None else None
         )
@@ -53,37 +54,22 @@ class CoSTEER(Developer[Experiment]):
         self.evaluator = eva
         self.evolving_version = evolving_version
 
-        # init knowledge base
-        self.knowledge_base = self.load_or_init_knowledge_base(
-            former_knowledge_base_path=self.knowledge_base_path,
-            component_init_list=[],
-        )
         # init rag method
         self.rag = (
-            CoSTEERRAGStrategyV2(self.knowledge_base, settings=settings)
-            if self.evolving_version == 2
-            else CoSTEERRAGStrategyV1(self.knowledge_base, settings=settings)
-        )
-
-    def load_or_init_knowledge_base(self, former_knowledge_base_path: Path = None, component_init_list: list = []):
-        if former_knowledge_base_path is not None and former_knowledge_base_path.exists():
-            knowledge_base = pickle.load(open(former_knowledge_base_path, "rb"))
-            if self.evolving_version == 1 and not isinstance(knowledge_base, CoSTEERKnowledgeBaseV1):
-                raise ValueError("The former knowledge base is not compatible with the current version")
-            elif self.evolving_version == 2 and not isinstance(
-                knowledge_base,
-                CoSTEERKnowledgeBaseV2,
-            ):
-                raise ValueError("The former knowledge base is not compatible with the current version")
-        else:
-            knowledge_base = (
-                CoSTEERKnowledgeBaseV2(
-                    init_component_list=component_init_list,
-                )
-                if self.evolving_version == 2
-                else CoSTEERKnowledgeBaseV1()
+            CoSTEERRAGStrategyV2(
+                settings=settings,
+                former_knowledge_base_path=self.knowledge_base_path,
+                dump_knowledge_base_path=self.new_knowledge_base_path,
+                evolving_version=self.evolving_version,
             )
-        return knowledge_base
+            if self.evolving_version == 2
+            else CoSTEERRAGStrategyV1(
+                settings=settings,
+                former_knowledge_base_path=self.knowledge_base_path,
+                dump_knowledge_base_path=self.new_knowledge_base_path,
+                evolving_version=self.evolving_version,
+            )
+        )
 
     def develop(self, exp: Experiment) -> Experiment:
 
@@ -97,6 +83,8 @@ class CoSTEER(Developer[Experiment]):
             with_knowledge=self.with_knowledge,
             with_feedback=self.with_feedback,
             knowledge_self_gen=self.knowledge_self_gen,
+            enable_filelock=self.settings.enable_filelock,
+            filelock_path=self.settings.filelock_path,
         )
 
         start_datetime = datetime.now()
@@ -105,7 +93,7 @@ class CoSTEER(Developer[Experiment]):
             logger.log_object(evo_exp.sub_workspace_list, tag="evolving code")
             for sw in evo_exp.sub_workspace_list:
                 logger.info(f"evolving workspace: {sw}")
-            if (datetime.now() - start_datetime).seconds > self.max_seconds:
+            if self.max_seconds is not None and (datetime.now() - start_datetime).seconds > self.max_seconds:
                 logger.info(f"Reached max time limit {self.max_seconds} seconds, stop evolving")
                 break
             if RD_Agent_TIMER_wrapper.timer.started and RD_Agent_TIMER_wrapper.timer.is_timeout():
@@ -115,11 +103,6 @@ class CoSTEER(Developer[Experiment]):
         if self.with_feedback and self.filter_final_evo:
             evo_exp = self._exp_postprocess_by_feedback(evo_exp, self.evolve_agent.evolving_trace[-1].feedback)
 
-        # save new knowledge base
-        if self.new_knowledge_base_path is not None:
-            with self.new_knowledge_base_path.open("wb") as f:
-                pickle.dump(self.knowledge_base, f)
-            logger.info(f"New knowledge base saved to {self.new_knowledge_base_path}")
         exp.sub_workspace_list = evo_exp.sub_workspace_list
         exp.experiment_workspace = evo_exp.experiment_workspace
         return exp

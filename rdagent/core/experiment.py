@@ -294,6 +294,12 @@ ASpecificWSForExperiment = TypeVar("ASpecificWSForExperiment", bound=Workspace)
 ASpecificWSForSubTasks = TypeVar("ASpecificWSForSubTasks", bound=Workspace)
 
 
+class ExperimentPlan(dict[str, Any]):
+    """
+    A plan for the experiment, which is a dictionary that contains the plan to each stage.
+    """
+
+
 class Experiment(
     ABC,
     Generic[ASpecificTask, ASpecificWSForExperiment, ASpecificWSForSubTasks],
@@ -339,6 +345,9 @@ class Experiment(
 
         # For parallel multi-trace support
         self.local_selection: tuple[int, ...] | None = None
+        self.plan: ExperimentPlan | None = (
+            None  # To store the planning information for this experiment, should be generated inside exp_gen.gen
+        )
 
     @property
     def result(self) -> object:
@@ -350,6 +359,7 @@ class Experiment(
 
 
 ASpecificExp = TypeVar("ASpecificExp", bound=Experiment)
+ASpecificPlan = TypeVar("ASpecificPlan", bound=ExperimentPlan)
 
 TaskOrExperiment = TypeVar("TaskOrExperiment", Task, Experiment)
 

@@ -106,7 +106,7 @@ class FactorCodeEvaluator(FactorEvaluator):
                     user_prompt=user_prompt,
                     system_prompt=system_prompt,
                 )
-                > LLM_SETTINGS.chat_token_limit
+                > APIBackend().chat_token_limit
             ):
                 execution_feedback_to_render = execution_feedback_to_render[len(execution_feedback_to_render) // 2 :]
             else:
@@ -512,7 +512,7 @@ class FactorFinalDecisionEvaluator(FactorEvaluator):
                     user_prompt=user_prompt,
                     system_prompt=system_prompt,
                 )
-                > LLM_SETTINGS.chat_token_limit
+                > APIBackend().chat_token_limit
             ):
                 execution_feedback_to_render = execution_feedback_to_render[len(execution_feedback_to_render) // 2 :]
             else:
