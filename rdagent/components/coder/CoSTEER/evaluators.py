@@ -127,11 +127,23 @@ class CoSTEERSingleFeedbackDeprecated(CoSTEERSingleFeedback):
         final_decision_based_on_gt: bool = None,
     ) -> None:
         from rdagent.oai.llm_utils import remove_tag_with_content
-        self.execution_feedback = remove_tag_with_content(execution_feedback, 'think')
-        self.code_feedback = remove_tag_with_content(code_feedback, 'think')
-        self.value_feedback = remove_tag_with_content(value_feedback, 'think')
+        if isinstance(execution_feedback, str):
+            self.execution_feedback = remove_tag_with_content(execution_feedback, 'think')
+        else:
+            self.execution_feedback = execution_feedback
+        if isinstance(code_feedback, str):
+            self.code_feedback = remove_tag_with_content(code_feedback, 'think')
+        else:
+            self.code_feedback = code_feedback
+        if isinstance(value_feedback, str):
+            self.value_feedback = remove_tag_with_content(value_feedback, 'think')
+        else:
+            self.value_feedback = value_feedback
         self.final_decision = final_decision
-        self.final_feedback = remove_tag_with_content(final_feedback, 'think')
+        if isinstance(final_feedback, str):
+            self.final_feedback = remove_tag_with_content(final_feedback, 'think')
+        else:
+            self.final_feedback = final_feedback
         self.value_generated_flag = value_generated_flag
         self.final_decision_based_on_gt = final_decision_based_on_gt
 

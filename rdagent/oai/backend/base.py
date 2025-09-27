@@ -674,19 +674,15 @@ class APIBackend(ABC):
             if json_target_type:
                 # deepseek will enter this branch
                 # TypeAdapter(json_target_type).validate_json(all_response)
-                logger.warning(
-                    f"validate_json start _create_chat_completion_auto_continue , json_target_type: {json_target_type}, all_response: {all_response}")
+                logger.warning(f"validate_json start _create_chat_completion_auto_continue , json_target_type: {json_target_type}, all_response: {all_response}")
                 match = re.search(r'"code": "(.*)"\s*}', all_response, re.DOTALL)
                 if json_target_type == Dict[str, str] and match:
-                    logger.warning(
-                        f"validate_json : not execute TypeAdapter json_target_type:{json_target_type}, match:{match}")
+                    logger.warning(f"validate_json : not execute TypeAdapter json_target_type:{json_target_type}, match:{match}")
                 else:
-                    logger.warning(
-                        f"validate_json : execute TypeAdapter json_target_type:{json_target_type}, match:{match}")
-                    TypeAdapter(json_target_type).validate_json(all_response)
-                logger.warning(
-                    f"validate_json end _create_chat_completion_auto_continue , json_target_type: {json_target_type}, all_response: {all_response}")
-                TypeAdapter(json_target_type).validate_json(all_response)
+                    logger.warning(f"validate_json : execute TypeAdapter json_target_type:{json_target_type}, match:{match}")
+                    # TypeAdapter(json_target_type).validate_json(clean_json_str(all_response))
+                logger.warning(f"validate_json end _create_chat_completion_auto_continue , json_target_type: {json_target_type}, all_response: {all_response}")
+                # TypeAdapter(json_target_type).validate_json(all_response)
 
         if response_format is not None:
             if not isinstance(response_format, dict) and issubclass(response_format, BaseModel):
