@@ -28,6 +28,21 @@
 [![arXiv](https://img.shields.io/badge/arXiv-2505.14738-00ff00.svg)](https://arxiv.org/abs/2505.14738)
 
 
+# 📰 News
+| 🗞️ News        | 📝 Description                 |
+| --            | ------      |
+| NeurIPS 2025 Acceptance | We are thrilled to announce that our paper [R&D-Agent-Quant](https://arxiv.org/abs/2505.15155) has been accepted to NeurIPS 2025 | 
+| [Technical Report Release](#overall-technical-report) | Overall framework description and results on MLE-bench | 
+| [R&D-Agent-Quant Release](#deep-application-in-diverse-scenarios) | Apply R&D-Agent to quant trading | 
+| MLE-Bench Results Released | R&D-Agent currently leads as the [top-performing machine learning engineering agent](#-the-best-machine-learning-engineering-agent) on MLE-bench |
+| Support LiteLLM Backend | We now fully support **[LiteLLM](https://github.com/BerriAI/litellm)** as our default backend for integration with multiple LLM providers. |
+| General Data Science Agent | [Data Science Agent](https://rdagent.readthedocs.io/en/latest/scens/data_science.html) |
+| Kaggle Scenario release | We release **[Kaggle Agent](https://rdagent.readthedocs.io/en/latest/scens/data_science.html)**, try the new features!                  |
+| Official WeChat group release  | We created a WeChat group, welcome to join! (🗪[QR Code](https://github.com/microsoft/RD-Agent/issues/880)) |
+| Official Discord release  | We launch our first chatting channel in Discord (🗪[![Chat](https://img.shields.io/badge/chat-discord-blue)](https://discord.gg/ybQ97B6Jjy)) |
+| First release | **R&D-Agent** is released on GitHub |
+
+
 
 # 🏆 The Best Machine Learning Engineering Agent!
 
@@ -37,8 +52,8 @@ R&D-Agent currently leads as the top-performing machine learning engineering age
 
 | Agent | Low == Lite (%) | Medium (%) | High (%) | All (%) |
 |---------|--------|-----------|---------|----------|
+| R&D-Agent o3(R)+GPT-4.1(D) | 51.52 ± 6.9 | 19.3 ± 5.5 | 26.67 ± 0 | 30.22 ± 1.5 |
 | R&D-Agent o1-preview | 48.18 ± 2.49 | 8.95 ± 2.36 | 18.67 ± 2.98 | 22.4 ± 1.1 |
-| R&D-Agent o3(R)+GPT-4.1(D) | 51.52 ± 6.21 | 7.89 ± 3.33 | 16.67 ± 3.65 | 22.45 ± 2.45 |
 | AIDE o1-preview | 34.3 ± 2.4 | 8.8 ± 1.1 | 10.0 ± 1.9 | 16.9 ± 1.1 |
 
 **Notes:**
@@ -62,21 +77,6 @@ R&D-Agent for Quantitative Finance, in short **RD-Agent(Q)**, is the first data-
 Extensive experiments in real stock markets show that, at a cost under $10, RD-Agent(Q) achieves approximately 2× higher ARR than benchmark factor libraries while using over 70% fewer factors. It also surpasses state-of-the-art deep time-series models under smaller resource budgets. Its alternating factor–model optimization further delivers excellent trade-off between predictive accuracy and strategy robustness.
 
 You can learn more details about **RD-Agent(Q)** through the [paper](https://arxiv.org/abs/2505.15155) and reproduce it through the [documentation](https://rdagent.readthedocs.io/en/latest/scens/quant_agent_fin.html).
-
-# 📰 News
-| 🗞️ News        | 📝 Description                 |
-| --            | ------      |
-| [Technical Report Release](#overall-technical-report) | Overall framework description and results on MLE-bench | 
-| [R&D-Agent-Quant Release](#deep-application-in-diverse-scenarios) | Apply R&D-Agent to quant trading | 
-| MLE-Bench Results Released | R&D-Agent currently leads as the [top-performing machine learning engineering agent](#-the-best-machine-learning-engineering-agent) on MLE-bench |
-| Support LiteLLM Backend | We now fully support **[LiteLLM](https://github.com/BerriAI/litellm)** as our default backend for integration with multiple LLM providers. |
-| General Data Science Agent | [Data Science Agent](https://rdagent.readthedocs.io/en/latest/scens/data_science.html) |
-| Kaggle Scenario release | We release **[Kaggle Agent](https://rdagent.readthedocs.io/en/latest/scens/data_science.html)**, try the new features!                  |
-| Official WeChat group release  | We created a WeChat group, welcome to join! (🗪[QR Code](https://github.com/microsoft/RD-Agent/issues/880)) |
-| Official Discord release  | We launch our first chatting channel in Discord (🗪[![Chat](https://img.shields.io/badge/chat-discord-blue)](https://discord.gg/ybQ97B6Jjy)) |
-| First release | **R&D-Agent** is released on GitHub |
-
-
 
 # Data Science Agent Preview
 Check out our demo video showcasing the current progress of our Data Science Agent under development:
@@ -172,6 +172,9 @@ More details can be found in the [development setup](https://rdagent.readthedocs
 - **Using LiteLLM (Default)**: We now support LiteLLM as a backend for integration with multiple LLM providers. You can configure in multiple ways:
 
   **Option 1: Unified API base for both models**
+
+  *Configuration Example: `OpenAI` Setup :*
+
   ```bash
   cat << EOF  > .env
   # Set to any model supported by LiteLLM.
@@ -180,6 +183,19 @@ More details can be found in the [development setup](https://rdagent.readthedocs
   # Configure unified API base
   OPENAI_API_BASE=<your_unified_api_base>
   OPENAI_API_KEY=<replace_with_your_openai_api_key>
+  ```
+
+  *Configuration Example: `Azure OpenAI` Setup :*
+
+  > Before using this configuration, please confirm in advance that your `Azure OpenAI API key` supports `embedded models`.
+
+  ```bash
+  cat << EOF  > .env
+  EMBEDDING_MODEL=azure/<Model deployment supporting embedding>
+  CHAT_MODEL=azure/<your deployment name>
+  AZURE_API_KEY=<replace_with_your_openai_api_key>
+  AZURE_API_BASE=<your_unified_api_base>
+  AZURE_API_VERSION=<azure api version>
   ```
 
   **Option 2: Separate API bases for Chat and Embedding models**
@@ -201,7 +217,7 @@ More details can be found in the [development setup](https://rdagent.readthedocs
   LITELLM_PROXY_API_BASE=https://api.siliconflow.cn/v1
   ```
 
-  **Configuration Example: DeepSeek Setup**:
+  *Configuration Example: `DeepSeek` Setup :*
 
   >Since many users encounter configuration errors when setting up DeepSeek. Here's a complete working example for DeepSeek Setup:
   ```bash
@@ -254,12 +270,12 @@ The **[🖥️ Live Demo](https://rdagent.azurewebsites.net/)** is implemented b
 - Run the **Automated Quantitative Trading & Factors Extraction from Financial Reports**:  Run the [Qlib](http://github.com/microsoft/qlib) factor extraction and implementation application based on financial reports
   ```sh
   # 1. Generally, you can run this scenario using the following command:
-  rdagent fin_factor_report --report_folder=<Your financial reports folder path>
+  rdagent fin_factor_report --report-folder=<Your financial reports folder path>
 
   # 2. Specifically, you need to prepare some financial reports first. You can follow this concrete example:
   wget https://github.com/SunsetWolf/rdagent_resource/releases/download/reports/all_reports.zip
   unzip all_reports.zip -d git_ignore_folder/reports
-  rdagent fin_factor_report --report_folder=git_ignore_folder/reports
+  rdagent fin_factor_report --report-folder=git_ignore_folder/reports
   ```
 
 - Run the **Automated Model Research & Development Copilot**: model extraction and implementation application
@@ -324,7 +340,7 @@ The **[🖥️ Live Demo](https://rdagent.azurewebsites.net/)** is implemented b
 - You can run the following command for our demo program to see the run logs.
 
   ```sh
-  rdagent ui --port 19899 --log_dir <your log folder like "log/"> --data_science <True or False>
+  rdagent ui --port 19899 --log-dir <your log folder like "log/"> --data-science
   ```
 
 - About the `data_science` parameter: If you want to see the logs of the data science scenario, set the `data_science` parameter to `True`; otherwise set it to `False`.

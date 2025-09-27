@@ -105,6 +105,8 @@ class DataScienceRDLoop(RDLoop):
         self.sota_exp_selector = import_class(PROP_SETTING.sota_exp_selector_name)()
         self.exp_gen: ExpGen = import_class(PROP_SETTING.hypothesis_gen)(scen)
 
+        self.interactor = import_class(PROP_SETTING.interactor)(scen)
+
         # coders
         self.data_loader_coder = DataLoaderCoSTEER(scen)
         self.feature_coder = FeatureCoSTEER(scen)
@@ -140,6 +142,7 @@ class DataScienceRDLoop(RDLoop):
         # in parallel + multi-trace mode, the above global "trace.current_selection" will not be used
         # instead, we will use the "local_selection" attached to each exp to in async_gen().
         exp = await self.exp_gen.async_gen(self.trace, self)
+        exp = self.interactor.interact(exp, self.trace)
 
         logger.log_object(exp)
         return exp
@@ -221,7 +224,15 @@ class DataScienceRDLoop(RDLoop):
         else:
             exp: DSExperiment = prev_out["direct_exp_gen"] if isinstance(e, CoderError) else prev_out["coding"]
             # TODO: distinguish timeout error & other exception.
-            if isinstance(self.trace.scen, DataScienceScen) and DS_RD_SETTING.allow_longer_timeout:
+            if (
+                isinstance(self.trace.scen, DataScienceScen)
+                and DS_RD_SETTING.allow_longer_timeout
+                and isinstance(e, CoderError)
+                and e.caused_by_timeout
+            ):
+                logger.info(
+                    f"Timeout error occurred: {e}. Increasing timeout for the current scenario from {self.trace.scen.timeout_increase_count} to {self.trace.scen.timeout_increase_count + 1}."
+                )
                 self.trace.scen.increase_timeout()
 
             # set the local selection to the trace as global selection, then set the DAG parent for the trace
@@ -301,7 +312,7 @@ class DataScienceRDLoop(RDLoop):
 
             # only clean current workspace without affecting other loops.
             for k in "direct_exp_gen", "coding", "running":
-                if k in prev_out:
+                if k in prev_out and prev_out[k] is not None:
                     assert isinstance(prev_out[k], DSExperiment)
                     clean_workspace(prev_out[k].experiment_workspace.workspace_path)
 
