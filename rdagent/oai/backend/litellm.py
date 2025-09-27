@@ -105,7 +105,7 @@ class LiteLLMAPIBackend(APIBackend):
         """
         Call the chat completion function
         """
-
+        logger.warning(f"_create_chat_completion_inner_function response_format: {response_format}" )
         if response_format and not supports_response_schema(model=LITELLM_SETTINGS.chat_model):
             # Deepseek will enter this branch
             logger.warning(
@@ -116,6 +116,9 @@ class LiteLLMAPIBackend(APIBackend):
 
         if response_format:
             kwargs["response_format"] = response_format
+
+        kwargs["response_format"] = {"type": "text"}
+
 
         if LITELLM_SETTINGS.log_llm_chat_content:
             logger.info(self._build_log_messages(messages), tag="llm_messages")
